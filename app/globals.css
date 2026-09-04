@@ -152,7 +152,8 @@ h1 { margin: 0 0 14px; font-weight: 500; font-size: 60px; line-height: 1.08; let
 @media (max-width: 640px) {
   .shell, .header-inner, .faq-section { width: min(100% - 32px, 1200px); }
   .site-header { height: 68px; }
-  .logo { transform: scale(.82); transform-origin: left center; width: 147px; }
+  .logo { width: 147px; height: 26px; overflow: hidden; transform: none; }
+  .logo img { width: 646px; height: 26px; }
   .outline-button { padding: 7px 14px; }
   .hero { width: calc(100% - 24px); height: 600px; margin-top: 20px; }
   .hero-image { object-position: 57% center; }
@@ -163,7 +164,7 @@ h1 { margin: 0 0 14px; font-weight: 500; font-size: 60px; line-height: 1.08; let
   .hero-content > p:last-child { font-size: 16px; }
   .desktop-break { display: none; }
   .hero-button { left: 22px; right: auto; bottom: 25px; }
-  .narrow-section { padding: 90px 0; }
+  .narrow-section { padding: 76px 0; }
   .intro h2 { margin-bottom: 32px; font-size: 25px; }
   .intro p { font-size: 16px; }
   .why { width: calc(100% - 32px); }
@@ -175,19 +176,19 @@ h1 { margin: 0 0 14px; font-weight: 500; font-size: 60px; line-height: 1.08; let
   .servicing-modal-close { top: 12px; right: 12px; }
   .why-copy .servicing-modal h2 { margin-right: 35px; font-size: 27px; }
   .why-copy .servicing-modal-copy p { font-size: 14px; line-height: 1.55; }
-  .how { padding: 95px 0 90px; }
-  .how > h2, .faq-section > h2 { font-size: 31px; margin-bottom: 72px; }
+  .how { padding: 82px 0 76px; }
+  .how > h2, .faq-section > h2 { font-size: 31px; margin-bottom: 62px; }
   .steps { grid-template-columns: 1fr; gap: 70px; }
   .steps::before { display: none; }
   .step-card { min-height: 330px; padding-top: 35px; }
   .step-number { top: -40px; }
   .step-number::after { height: 12px; }
   .step-icon { margin-bottom: 30px; }
-  .faq-section { padding-bottom: 90px; }
+  .faq-section { padding-bottom: 76px; }
   .faq-list { gap: 12px; }
   .faq-list summary { min-height: 58px; padding: 0 12px 0 16px; font-size: 14px; gap: 15px; }
   .faq-answer { padding: 8px 16px 20px; font-size: 13px; }
-  .contact-section { width: 100%; padding: 12px; gap: 25px; margin-bottom: 72px; border-radius: 0; background: transparent; }
+  .contact-section { width: 100%; padding: 12px; gap: 25px; margin-bottom: 60px; border-radius: 0; background: transparent; }
   .contact-card { min-height: 552px; }
   .contact-card-intro { padding: 25px 29px 0; }
   .contact-card h2 { margin-bottom: 19px; font-size: 26px; }
