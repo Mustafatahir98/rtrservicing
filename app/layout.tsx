@@ -3,8 +3,25 @@ import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "https://rtrservicing.vercel.app",
+  ),
   title: "RTR Servicing | Loan Servicing Made Simple",
   description: "Secure, customer-focused loan servicing for payments, statements, and account details.",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "RTR Servicing",
+    title: "RTR Servicing | Your Loan. Less Worry. More Clarity.",
+    description: "Manage payments, view statements, and get support for your loan in one place.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RTR Servicing | Your Loan. Less Worry. More Clarity.",
+    description: "Manage payments, view statements, and get support for your loan in one place.",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
