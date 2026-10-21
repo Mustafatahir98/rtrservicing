@@ -1,0 +1,132 @@
+/* RTR Servicing — /home sections. Shared tokens, header and footer live in app/site.css.
+   Images are never rendered larger than their source pixels:
+   hero 1396×1132, support photos 521×251, sketches 1440×~800; mobile art 370×1034, 319×253, 390×1364. */
+
+/* Hero — full-bleed, rounded only at the bottom. */
+.hm-hero { position: relative; overflow: hidden; width: 100%; min-height: clamp(780px, 72.3vw, 1100px); padding-bottom: 48px; border-radius: 0 0 24px 24px; background: var(--hm-sky); }
+.hm-hero-media { position: absolute; inset: 0; overflow: hidden; }
+.hm-hero-image { object-fit: cover; object-position: center bottom; }
+.hm-hero-grid { position: relative; z-index: 1; width: min(var(--hm-shell), calc(100% - 2 * var(--hm-gutter))); margin-inline: auto; display: grid; grid-template-columns: minmax(0, 1fr) 458px; gap: 48px; align-items: start; padding-top: 126px; }
+.hm-hero-copy .hm-badge { margin-bottom: 22px; text-transform: uppercase; }
+.hm-hero-copy h1 { margin-bottom: 16px; font-size: var(--hm-h1); line-height: 1.04; font-weight: 500; letter-spacing: -.02em; }
+.hm-hero-copy h1 span { color: var(--hm-green); }
+.hm-hero-copy p { margin-bottom: 26px; font-size: var(--hm-copy-lg); }
+.hm-hero-buttons { display: flex; flex-wrap: wrap; gap: 16px; }
+.hm-hero-buttons .hm-btn { min-width: 248px; min-height: 58px; font-size: 18px; }
+
+/* Sign-in card */
+.hm-signin { scroll-margin-top: 120px; padding: 34px 34px 32px; border-radius: 14px; background: #fff; box-shadow: 0 24px 60px rgba(0, 14, 22, .12); }
+.hm-signin h2 { color: var(--hm-blue); font-size: 26px; line-height: 1.3; font-weight: 500; }
+.hm-signin-sub { margin-top: 6px; padding-bottom: 22px; border-bottom: 1px solid var(--hm-cloud); font-size: 14px; }
+.hm-signin form { display: grid; gap: 16px; margin-top: 26px; }
+.hm-field { display: grid; gap: 10px; font-size: 15px; }
+.hm-field-row { display: flex; justify-content: space-between; align-items: baseline; }
+.hm-field-row a { color: var(--hm-blue); font-size: 12px; font-weight: 600; text-decoration: underline; }
+.hm-field input { width: 100%; height: 54px; padding: 0 20px; border: 1px solid #a9b6bd; border-radius: 10px; color: var(--hm-midnight); background: #fff; font-size: 15px; transition: border-color .2s ease; }
+.hm-field input::placeholder { color: #8a979e; }
+.hm-field input:focus { border-color: var(--hm-blue); outline: none; }
+.hm-password { position: relative; display: block; }
+.hm-password input { padding-right: 52px; }
+.hm-password button { position: absolute; top: 50%; right: 8px; width: 38px; height: 38px; transform: translateY(-50%); display: grid; place-items: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--hm-blue); cursor: pointer; }
+.hm-password svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.hm-signin .hm-btn { min-height: 58px; font-size: 17px; }
+.hm-signin .hm-btn-blue { margin-top: 10px; }
+.hm-signin .hm-btn-outline { border-color: var(--hm-midnight); }
+.hm-signin-message { padding: 12px 14px; border-radius: 8px; color: var(--hm-blue-dark); background: var(--hm-blue-soft); font-size: 14px; }
+
+/* What would you like to do? — the sketch is scaled to fit inside the section (contain), so its top is never cut off;
+   a white fade over its lowest part hides the hard edge where the drawing file ends. */
+.hm-actions { padding: var(--hm-section) 0; background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 65%, #fff 100%), url("/home/sketch-building.png") center bottom / contain no-repeat, #fff; }
+.hm-section-title { margin: 0 auto 48px; text-align: center; font-size: var(--hm-h2); line-height: 1.3; font-weight: 500; letter-spacing: -.02em; }
+.hm-section-title span { color: var(--hm-green); }
+.hm-action-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.hm-action-card { display: flex; flex-direction: column; align-items: center; padding: 39px 34px 32px; text-align: center; border-radius: 10px 10px 0 0; border-bottom: 3px solid; transition: transform .2s ease, box-shadow .2s ease; }
+.hm-action-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0, 14, 22, .08); }
+.hm-action-card.is-green { background: var(--hm-green-soft); border-color: var(--hm-green); }
+.hm-action-card.is-blue { background: var(--hm-blue-soft); border-color: var(--hm-blue); }
+.hm-action-icon { display: block; width: 100%; padding-bottom: 40px; margin-bottom: 28px; border-bottom: 1px solid rgba(0, 14, 22, .12); }
+.hm-action-icon svg { display: block; width: 48px; height: 48px; margin-inline: auto; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.is-green .hm-action-icon svg { stroke: var(--hm-green); }
+.is-blue .hm-action-icon svg { stroke: var(--hm-blue); }
+.hm-action-card h3 { font-size: 24px; line-height: 1.3; font-weight: 500; }
+.hm-action-card p { margin: 12px 0 24px; font-size: 17px; }
+.hm-action-card .hm-btn { margin-top: auto; min-width: 210px; min-height: 58px; font-size: 17px; }
+
+/* Support cards — photos stay at their native 521×251. */
+.hm-support { padding: var(--hm-section) var(--hm-gutter); background: #f7f7f7 url("/home/sketch-city.png") center bottom / 1440px auto no-repeat; }
+.hm-support-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 567px)); justify-content: center; gap: var(--hm-space-cards); }
+.hm-support-card { display: flex; flex-direction: column; padding: 23px 23px 44px; border-radius: 14px; color: #fff; }
+.hm-support-card.is-blue { background: var(--hm-blue); }
+.hm-support-card.is-green { background: var(--hm-green); }
+.hm-support-media { overflow: hidden; border-radius: 12px; }
+.hm-support-media img { display: block; width: 100%; max-width: 521px; height: auto; }
+.hm-support-card > :not(.hm-support-media) { margin-inline: 13px; }
+.hm-support-meta { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-top: 40px; }
+.hm-pill { flex: none; white-space: nowrap; padding: 8px 18px; border-radius: 6px; color: var(--hm-midnight); background: #fff; font-size: 13px; }
+.hm-hours { text-align: right; font-size: 15px; line-height: 1.6; }
+.hm-support-card h2 { margin-top: 16px; font-size: 50px; line-height: 1.12; font-weight: 500; letter-spacing: -.02em; }
+.hm-support-card.is-green h2 { margin-top: 36px; }
+.hm-support-card p { margin-top: 18px; font-size: 18px; }
+.hm-support-buttons { display: flex; gap: 12px; margin-top: auto; padding-top: 30px; }
+.hm-support-buttons .hm-btn { flex: 1 1 0; min-height: 58px; font-size: 18px; }
+.is-green .hm-support-buttons .hm-btn { flex: 0 0 246px; }
+
+/* Laptop */
+@media (max-width: 1200px) {
+  .hm-hero-grid { grid-template-columns: minmax(0, 1fr) 420px; padding-top: 96px; }
+  .hm-action-card { padding-inline: 20px; }
+  .hm-action-card .hm-btn { min-width: 0; width: 100%; }
+}
+
+/* Tablet — copy and sign-in sit on the sky, the house follows underneath. */
+@media (max-width: 1024px) {
+  .hm-hero { display: flex; flex-direction: column; min-height: 0; padding-bottom: 0; }
+  .hm-hero-grid { order: 1; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 28px; padding: 48px 0 0; }
+  .hm-hero-media { order: 2; position: relative; inset: auto; aspect-ratio: 1396 / 740; margin-top: -40px; }
+  .hm-hero-buttons .hm-btn { min-width: 0; flex: 1 1 200px; min-height: 52px; font-size: 16px; }
+  .hm-signin { padding: 26px 24px; }
+  .hm-section-title { margin-bottom: var(--hm-space-group); }
+  .hm-action-grid { grid-template-columns: repeat(2, 1fr); gap: var(--hm-space-cards); }
+  .hm-support-grid { grid-template-columns: minmax(0, 567px); }
+}
+
+/* Small tablet / zoomed-in laptop — not enough room for the headline beside the card, so stack them. */
+@media (max-width: 860px) {
+  .hm-hero-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .hm-signin { width: 100%; max-width: 560px; }
+  .hm-hero-media { margin-top: 0; }
+}
+
+/* Mobile — order becomes copy, house, sign-in. */
+@media (max-width: 640px) {
+  .hm-hero { padding-bottom: 20px; border-radius: 0 0 18px 18px; }
+  .hm-hero-grid { display: contents; }
+  .hm-hero-copy { order: 1; padding: 32px var(--hm-gutter) 0; }
+  .hm-hero-media { order: 2; margin-top: 20px; }
+  .hm-signin { order: 3; width: auto; margin: -8px var(--hm-gutter) 0; padding: 24px 18px; }
+  .hm-hero-buttons .hm-btn { flex: 1 1 100%; }
+  .hm-action-grid { grid-template-columns: 1fr; }
+  .hm-support-card { padding: 12px 12px 28px; }
+  .hm-support-card > :not(.hm-support-media) { margin-inline: 8px; }
+  .hm-support-meta { flex-direction: column; gap: 12px; margin-top: 24px; }
+  .hm-hours { text-align: left; }
+  .hm-hours br { display: none; }
+  .hm-support-card h2 { font-size: 36px; }
+  .hm-support-card.is-green h2 { margin-top: 24px; }
+  .hm-support-buttons { flex-direction: column; }
+  .hm-support-buttons .hm-btn, .is-green .hm-support-buttons .hm-btn { flex: 1 1 auto; min-height: 52px; font-size: 16px; }
+}
+
+/* Phones — purpose-made 370×1034 hero art sits behind copy and card, house peeking out underneath.
+   Mobile photos (319×253) and the tall city sketch (390×1364) are shown at native size. */
+@media (max-width: 480px) {
+  .hm-hero { display: block; min-height: calc(100vw * 1034 / 370); padding-bottom: 44vw; }
+  .hm-hero-media { position: absolute; inset: 0; margin: 0; aspect-ratio: auto; }
+  .hm-hero-grid { display: grid; width: calc(100% - 2 * var(--hm-gutter)); grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 32px 0 0; }
+  .hm-hero-copy { padding: 0; }
+  .hm-signin { width: auto; margin: 0; }
+  .hm-support { background-image: url("/home/sketch-city-mobile.png"); background-size: 390px auto; }
+  .hm-support-card { padding: 16px 16px 28px; }
+  .hm-support-media { display: flex; justify-content: center; border-radius: 0; }
+  .hm-support-media img { max-width: 319px; }
+}

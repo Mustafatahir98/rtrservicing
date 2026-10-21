@@ -1,109 +1,124 @@
-import Image from "next/image";
-import ContactForm from "@/components/contact-form";
-import FaqList from "@/components/faq-list";
-import ServicingModal from "@/components/servicing-modal";
+import type { Metadata } from "next";
+import { getImageProps } from "next/image";
+import Link from "next/link";
+import { googleSansFlex } from "@/app/fonts";
+import HomeSignIn from "@/components/home-sign-in";
+import SiteFooter, { phone } from "@/components/site-footer";
+import SiteHeader from "@/components/site-header";
+import "./site.css";
+import "./home/home.css";
 
-const steps = [
-  { title: "We contact you", copy: "We'll let you know about your account and next steps.", icon: "mail" },
-  { title: "You manage online", copy: "Access your account, make payments and view details.", icon: "screen" },
-  { title: "We're here to help", copy: "Our team is available if you have questions.", icon: "people" },
-] as const;
+export const metadata: Metadata = {
+  title: "RTR Servicing | Your Loan. Less Worry. More Clarity.",
+  description: "Make a payment, set up AutoPay, view statements and get payment assistance with RTR Servicing.",
+};
 
-function Logo({ className = "" }: { className?: string }) {
+/* Phones (≤480px) get the purpose-made mobile artwork; everything else gets the desktop file. */
+const mobileMedia = "(max-width: 480px)";
+
+function HeroPicture() {
+  const common = { alt: "A modern two-story home at sunset", fill: true, sizes: "100vw", quality: 90 } as const;
+  const { props: { srcSet: desktop, ...rest } } = getImageProps({ ...common, src: "/home/hero-house-full.jpg" });
+  const { props: { srcSet: mobile } } = getImageProps({ ...common, src: "/home/hero-house-mobile.jpg" });
   return (
-    <span className={`logo ${className}`}>
-      <Image src="/logo.png" alt="RTR Servicing" width={788} height={31} priority />
-    </span>
+    <picture>
+      <source media={mobileMedia} srcSet={mobile} />
+      <img {...rest} alt={common.alt} srcSet={desktop} className="hm-hero-image" loading="eager" fetchPriority="high" />
+    </picture>
   );
 }
 
-function StepIcon({ type }: { type: (typeof steps)[number]["icon"] }) {
-  if (type === "mail") return <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="12" width="34" height="25" rx="3"/><path d="m9 15 15 12 15-12"/></svg>;
-  if (type === "screen") return <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="9" width="36" height="27" rx="2"/><path d="M17 42h14M24 36v6"/></svg>;
-  return <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="16" r="6"/><circle cx="10" cy="19" r="5"/><circle cx="38" cy="19" r="5"/><path d="M15 37v-4c0-6 4-10 9-10s9 4 9 10v4M3 35v-3c0-5 3-8 7-8 2 0 4 1 5 3M45 35v-3c0-5-3-8-7-8-2 0-4 1-5 3"/></svg>;
+function SupportPicture({ desktop, mobile, alt }: { desktop: string; mobile: string; alt: string }) {
+  return (
+    <picture>
+      <source media={mobileMedia} srcSet={mobile} width={319} height={253} />
+      <img src={desktop} alt={alt} width={521} height={251} loading="lazy" decoding="async" />
+    </picture>
+  );
 }
 
-export default function Home() {
+const actions = [
+  { title: "Make a Payment", copy: "Pay online with no fee.", icon: "payment", tone: "green" },
+  { title: "Set Up AutoPay", copy: "Pick your draft date.", icon: "autopay", tone: "blue" },
+  { title: "View Statements", copy: "Statements and tax forms.", icon: "statements", tone: "green" },
+  { title: "Payment Assistance", copy: "Options if you need help.", icon: "assistance", tone: "blue" },
+] as const;
+
+function ActionIcon({ type }: { type: (typeof actions)[number]["icon"] }) {
+  if (type === "payment") return <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M38 14a17 17 0 1 1-4-4" strokeDasharray="3 4" /><circle cx="24" cy="24" r="12" /><path d="M27.5 19.5c-.7-1-2-1.5-3.5-1.5-2 0-3.4 1-3.4 2.6 0 3.6 7 1.9 7 5.6 0 1.7-1.5 2.8-3.6 2.8-1.6 0-3-.6-3.7-1.6M24 16v2m0 12v2" /></svg>;
+  if (type === "autopay") return <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M27 38H9a3 3 0 0 1-3-3V13a3 3 0 0 1 3-3h28a3 3 0 0 1 3 3v12M6 18h34M15 6v7m16-7v7" /><path d="M12 24h4m4 0h4m4 0h4m-20 6h4m4 0h4" /><circle cx="36" cy="36" r="7" /><path d="M36 32.5V36l2.5 1.5" /></svg>;
+  if (type === "statements") return <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="7" width="38" height="27" rx="3" /><path d="M18 41h12m-6-7v7M11 15h11m-11 6h11m-11 6h8" /><path d="M35 14.5c-.5-.8-1.4-1.2-2.5-1.2-1.4 0-2.4.7-2.4 1.8 0 2.6 5 1.4 5 4 0 1.2-1 2-2.6 2-1.1 0-2.1-.5-2.6-1.2m2.6-8v1.4m0 7.8v1.4" /></svg>;
+  return <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 26v-4a14 14 0 0 1 28 0v4" /><rect x="7" y="25" width="7" height="11" rx="3" /><rect x="34" y="25" width="7" height="11" rx="3" /><path d="M37.5 36c0 4-3 6-8 6h-3" /><rect x="21" y="39.5" width="6" height="5" rx="2" /></svg>;
+}
+
+export default function HomePage() {
   return (
-    <main>
-      <header className="site-header">
-        <div className="header-inner"><Logo /><a className="outline-button" href="#contact">Contact Us</a></div>
-      </header>
+    <div className={`hm ${googleSansFlex.variable}`}>
+      <SiteHeader />
 
-      <section className="hero shell" aria-labelledby="hero-title">
-        <Image className="hero-image" src="/hero-image.png" alt="A couple reviewing their loan documents together" fill priority sizes="(max-width: 768px) 100vw, 1200px" />
-        <div className="hero-wash" />
-        <div className="hero-content">
-          <p className="eyebrow"><span>✓</span> Trusted servicing for consumer and mortgage accounts.</p>
-          <h1 id="hero-title">Manage Your Loan<br />Servicing In One Place</h1>
-          <p>Secure simple tools to manage your payments,<br className="desktop-break" /> statements and account details.</p>
-        </div>
-        <a className="white-button hero-button" href="#contact">Contact Us <span>→</span></a>
-      </section>
-
-      <section className="intro shell narrow-section">
-        <h2>RTR Servicing provides reliable, customer-focused<br className="wide-break" /> loan servicing solutions designed to support borrowers<br className="wide-break" /> throughout every stage of the loan lifecycle.</h2>
-        <p>Backed by decades of industry experience, we combine responsive service,<br className="wide-break" /> flexible payment solutions, and a strong commitment to compliance to help<br className="wide-break" /> customers manage their financial obligations with confidence.</p>
-      </section>
-
-      <section className="why shell">
-        <div className="why-copy">
-          <h2>Why RTR Servicing Is<br />Contacting You?</h2>
-          <div>
-            <p>You may be receiving this communication because your account is now serviced by RTR Servicing. We&apos;re here to support you and make managing your account easy and secure.</p>
-            <ServicingModal />
+      <main>
+        <section className="hm-hero" aria-labelledby="hm-hero-title">
+          <div className="hm-hero-media">
+            <HeroPicture />
           </div>
-        </div>
-        <div className="pattern-panel">
-          <Image className="servicing-pattern" src="/servicing.png" alt="" fill sizes="(max-width: 900px) 100vw, 666px" />
-          <span className="rtr-mark">rtr<span>›</span></span>
-        </div>
-      </section>
+          <div className="hm-hero-grid">
+            <div className="hm-hero-copy">
+              <span className="hm-badge">Loan Servicing Made Simple</span>
+              <h1 id="hm-hero-title">Your Loan.<br />Less Worry<br /><span>More Clarity.</span></h1>
+              <p>Manage Your Loan Servicing In One Place</p>
+              <div className="hm-hero-buttons">
+                <a className="hm-btn hm-btn-outline-dark" href="#sign-in">Make a Payment</a>
+                <a className="hm-btn hm-btn-blue" href="#sign-in">New Here? Register</a>
+              </div>
+            </div>
+            <HomeSignIn phone={phone.label} />
+          </div>
+        </section>
 
-      <section id="how" className="how shell">
-        <h2>How Servicing Works</h2>
-        <div className="steps">
-          {steps.map((step, index) => (
-            <article className="step-card" key={step.title}>
-              <span className="step-number">{index + 1}</span>
-              <div className="step-icon"><StepIcon type={step.icon} /></div>
-              <h3>{step.title}</h3>
-              <p>{step.copy}</p>
+        <section className="hm-actions" aria-labelledby="hm-actions-title">
+          <div className="hm-shell">
+            <h2 id="hm-actions-title" className="hm-section-title">What would you <span>like</span><br /><span>to do?</span></h2>
+            <div className="hm-action-grid">
+              {actions.map((action) => (
+                <article className={`hm-action-card is-${action.tone}`} key={action.title}>
+                  <span className="hm-action-icon"><ActionIcon type={action.icon} /></span>
+                  <h3>{action.title}</h3>
+                  <p>{action.copy}</p>
+                  <a className="hm-btn hm-btn-blue" href="#sign-in">Get started</a>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="help" className="hm-support" aria-label="Customer support">
+          <div className="hm-support-grid">
+            <article className="hm-support-card is-blue">
+              <div className="hm-support-media"><SupportPicture desktop="/home/talk-person.png" mobile="/home/talk-person-mobile.png" alt="A couple speaking with an RTR Servicing representative" /></div>
+              <div className="hm-support-meta">
+                <span className="hm-pill">Live Customer Care</span>
+                <span className="hm-hours">Mon–Thu 7am–9pm, Fri <br />7am–7pm CT</span>
+              </div>
+              <h2>Talk to a real<br />person.</h2>
+              <div className="hm-support-buttons">
+                <a className="hm-btn hm-btn-white" href={phone.href}>Call {phone.label}</a>
+                <Link className="hm-btn hm-btn-white" href="/contact#message">Message us</Link>
+              </div>
             </article>
-          ))}
-        </div>
-      </section>
 
-      <section className="faq-section shell">
-        <h2>Frequently Asked Questions</h2>
-        <FaqList />
-        <p className="faq-contact">Couldn&apos;t find the answer? <a href="#contact">Contact us</a></p>
-      </section>
+            <article className="hm-support-card is-green">
+              <div className="hm-support-media"><SupportPicture desktop="/home/trouble-paying.png" mobile="/home/trouble-paying-mobile.png" alt="Reviewing a payment and floor plan paperwork" /></div>
+              <h2>Having trouble<br />paying?</h2>
+              <p>We&apos;ll work with you on your options.</p>
+              <div className="hm-support-buttons">
+                <a className="hm-btn hm-btn-white" href="#sign-in">See Your Options</a>
+              </div>
+            </article>
+          </div>
+        </section>
+      </main>
 
-      <section id="contact" className="contact-section shell">
-        <div className="contact-card pattern-soft">
-          <div className="contact-card-intro">
-            <h2>Contact Us</h2>
-            <p>Contact us today, and someone in our Customer Solutions Department will get back with you as soon as possible!</p>
-          </div>
-          <div className="contact-details">
-            <p>Call Us Toll-Free</p>
-            <a href="tel:8772523761">877-252-3761</a>
-            <p>Customer Solutions Professionals are available to assist you during the following hours:</p>
-            <p><strong>Monday – Thursday:</strong> 7:00 a.m. – 9:00 p.m.<br /><strong>Friday:</strong> 7:00 a.m. – 7:00 p.m.<br />All times Central</p>
-          </div>
-          <div className="contact-card-footer">
-            <small>*Hours may vary depending on department. If you reach us after hours, please leave us a voicemail and we will return your call.</small>
-            <span className="contact-mark"><Image src="/logo.png" alt="RTR" width={788} height={31} /></span>
-          </div>
-        </div>
-        <ContactForm />
-      </section>
-
-      <footer className="footer shell pattern-footer">
-        <div><Logo /><p>Secure simple tools to manage your<br />payments, statements and account details.</p></div>
-        <div className="footer-bottom"><span>© 2026 RTR Servicing. All rights reserved.</span><span>NMLS ID: 2123790</span></div>
-      </footer>
-    </main>
+      <SiteFooter />
+    </div>
   );
 }
