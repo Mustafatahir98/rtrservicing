@@ -4,7 +4,7 @@
 .hc-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* Hero */
-.hc-hero { position: relative; overflow: hidden; width: min(var(--hm-shell), calc(100% - 2 * var(--hm-gutter))); margin: 8px auto 0; padding: 100px var(--hm-gutter) 100px; border-radius: 24px; text-align: center; background: var(--hm-sky) url("/help-center/hero-bg-desktop.webp") center / cover no-repeat; }
+.hc-hero { position: relative; overflow: hidden; width: min(var(--hm-shell), calc(100% - 2 * var(--hm-gutter))); margin: var(--hm-hero-gap) auto 0; padding: 100px var(--hm-gutter) 100px; border-radius: 24px; text-align: center; background: var(--hm-sky) url("/help-center/hero-bg-desktop.webp") center / cover no-repeat; }
 .hc-hero-inner { position: relative; z-index: 1; max-width: 760px; margin-inline: auto; }
 .hc-hero h1 { margin-top: 28px; font-size: var(--hm-h2); line-height: 1.15; font-weight: 500; letter-spacing: -.02em; }
 .hc-hero h1 span { color: var(--hm-green); }

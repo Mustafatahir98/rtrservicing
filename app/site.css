@@ -21,6 +21,7 @@
   --hm-copy: 16px;
   --hm-shell: 1312px;
   --hm-gutter: 64px;
+  --hm-hero-gap: 32px;
   --hm-section: 96px;
   --hm-space-text: 20px;
   --hm-space-group: 40px;
@@ -120,6 +121,7 @@ html:has(.hm), body:has(.hm) { overflow-x: clip; overscroll-behavior-x: none; }
 
 /* Mobile */
 @media (max-width: 640px) {
+  .hm { --hm-hero-gap: 8px; }
   .hm { --hm-h1: clamp(30px, 11.8vw, 46px); --hm-h2: clamp(28px, 8.7vw, 34px); --hm-copy-lg: 16px; --hm-gutter: 20px; --hm-section: 48px; --hm-space-text: 10px; --hm-space-group: 22px; --hm-space-cards: 16px; }
   .hm-header-inner { height: 68px; }
   .hm-header-actions { display: none; }

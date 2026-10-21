@@ -53,7 +53,7 @@ function ActionIcon({ type }: { type: (typeof actions)[number]["icon"] }) {
 
 export default function HomePage() {
   return (
-    <div className={`hm ${googleSansFlex.variable}`}>
+    <div className={`hm hm-home ${googleSansFlex.variable}`}>
       <SiteHeader />
 
       <main>
@@ -77,7 +77,7 @@ export default function HomePage() {
 
         <section className="hm-actions" aria-labelledby="hm-actions-title">
           <div className="hm-shell">
-            <h2 id="hm-actions-title" className="hm-section-title">What would you <span>like</span><br /><span>to do?</span></h2>
+            <h2 id="hm-actions-title" className="hm-section-title">What would you <br className="hm-title-mobile-break" /><span>like</span><br className="hm-title-desktop-break" /> <span>to do?</span></h2>
             <div className="hm-action-grid">
               {actions.map((action) => (
                 <article className={`hm-action-card is-${action.tone}`} key={action.title}>

@@ -36,7 +36,7 @@ function CalendarClockIcon() {
 
 export default function ContactPage() {
   return (
-    <div className={`hm ${googleSansFlex.variable}`}>
+    <div className={`hm hm-contact ${googleSansFlex.variable}`}>
       <SiteHeader />
 
       <main>

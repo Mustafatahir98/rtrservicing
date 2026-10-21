@@ -74,16 +74,16 @@ function CallbackForm() {
       <Honeypot />
       <label className="ct-field">
         <span>Full Legal Name *</span>
-        <input name="fullName" autoComplete="name" required />
+        <input name="fullName" placeholder="Enter Name" autoComplete="name" required />
       </label>
       <div className="ct-row">
         <label className="ct-field">
           <span>Phone Number *</span>
-          <input name="phone" type="tel" autoComplete="tel" inputMode="tel" pattern="[0-9()+\-.\s]{10,}" title="Enter a phone number with at least 10 digits" required />
+          <input name="phone" type="tel" placeholder="Enter Name" autoComplete="tel" inputMode="tel" pattern="[0-9()+\-.\s]{10,}" title="Enter a phone number with at least 10 digits" required />
         </label>
         <label className="ct-field">
           <span>Account Number (Optional)</span>
-          <input name="accountNumber" inputMode="numeric" autoComplete="off" />
+          <input name="accountNumber" placeholder="Enter Account Number" inputMode="numeric" autoComplete="off" />
         </label>
       </div>
       <SelectField label="Time Zone" name="timeZone" options={timeZones} defaultValue="Central Time (CT)" />
@@ -103,7 +103,7 @@ function CallbackForm() {
       </fieldset>
       <SelectField label="Reason for Call" name="reason" options={reasons} defaultValue={reasons[0]} />
       <p className="ct-disclaimer">By submitting this request, you authorize RTR Servicing to contact you at the telephone number provided regarding your servicing inquiries.</p>
-      <button className="hm-btn hm-btn-blue hm-btn-block ct-submit" type="submit" disabled={status === "sending"}>{status === "sending" ? "Sending…" : "Request a Call"}</button>
+      <button className="hm-btn hm-btn-blue hm-btn-block ct-submit" type="submit" disabled={status === "sending"}>{status === "sending" ? "Sending…" : "Sign in to your Account"}</button>
       <StatusMessage status={status} error={error} sent="Thank you — your callback request has been received. A specialist will call you in the window you selected." />
     </form>
   );

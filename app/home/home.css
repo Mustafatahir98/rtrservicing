@@ -3,7 +3,8 @@
    hero 1396×1132, support photos 521×251, sketches 1440×~800; mobile art 370×1034, 319×253, 390×1364. */
 
 /* Hero — full-bleed, rounded only at the bottom. */
-.hm-hero { position: relative; overflow: hidden; width: 100%; min-height: clamp(780px, 72.3vw, 1100px); padding-bottom: 48px; border-radius: 0 0 24px 24px; background: var(--hm-sky); }
+.hm-home { --hm-hero-gap: 0px; }
+.hm-hero { margin-top: var(--hm-hero-gap); position: relative; overflow: hidden; width: 100%; min-height: clamp(780px, 72.3vw, 1100px); padding-bottom: 48px; border-radius: 0 0 24px 24px; background: var(--hm-sky); }
 .hm-hero-media { position: absolute; inset: 0; overflow: hidden; }
 .hm-hero-image { object-fit: cover; object-position: center bottom; }
 .hm-hero-grid { position: relative; z-index: 1; width: min(var(--hm-shell), calc(100% - 2 * var(--hm-gutter))); margin-inline: auto; display: grid; grid-template-columns: minmax(0, 1fr) 458px; gap: 48px; align-items: start; padding-top: 126px; }
@@ -39,6 +40,7 @@
 .hm-actions { padding: var(--hm-section) 0; background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 65%, #fff 100%), url("/home/sketch-building.png") center bottom / contain no-repeat, #fff; }
 .hm-section-title { margin: 0 auto 48px; text-align: center; font-size: var(--hm-h2); line-height: 1.3; font-weight: 500; letter-spacing: -.02em; }
 .hm-section-title span { color: var(--hm-green); }
+.hm-title-mobile-break { display: none; }
 .hm-action-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .hm-action-card { display: flex; flex-direction: column; align-items: center; padding: 39px 34px 32px; text-align: center; border-radius: 10px 10px 0 0; border-bottom: 3px solid; transition: transform .2s ease, box-shadow .2s ease; }
 .hm-action-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0, 14, 22, .08); }
@@ -97,15 +99,47 @@
   .hm-hero-media { margin-top: 0; }
 }
 
-/* Mobile — order becomes copy, house, sign-in. */
+/* Mobile — centered copy and a wide sign-in card over the house artwork. */
 @media (max-width: 640px) {
-  .hm-hero { padding-bottom: 20px; border-radius: 0 0 18px 18px; }
-  .hm-hero-grid { display: contents; }
-  .hm-hero-copy { order: 1; padding: 32px var(--hm-gutter) 0; }
-  .hm-hero-media { order: 2; margin-top: 20px; }
-  .hm-signin { order: 3; width: auto; margin: -8px var(--hm-gutter) 0; padding: 24px 18px; }
-  .hm-hero-buttons .hm-btn { flex: 1 1 100%; }
-  .hm-action-grid { grid-template-columns: 1fr; }
+  .hm-home .hm-header-inner { width: calc(100% - 28px); height: clamp(56px, 20vw, 74px); }
+  .hm-home .hm-header .hm-logo { width: 176px; height: 31px; transform: scale(.8); transform-origin: left center; }
+  .hm-home .hm-menu-toggle { border: 0; }
+  .hm-hero { display: block; min-height: 0; padding-bottom: 24px; border-radius: 0 0 14px 14px; }
+  .hm-hero-media { position: absolute; inset: 0; margin: 0; aspect-ratio: auto; }
+  .hm-hero-grid { display: grid; width: calc(100% - 16px); grid-template-columns: minmax(0, 1fr); gap: 12px; padding: clamp(36px, 13vw, 48px) 0 0; }
+  .hm-hero-copy { padding: 0 clamp(12px, 4.3vw, 20px); text-align: center; }
+  .hm-hero-copy .hm-badge { margin-bottom: 6px; padding: 7px 18px; border-radius: 5px; font-size: clamp(9px, 2.7vw, 11px); letter-spacing: 0; font-weight: 500; }
+  .hm-hero-copy h1 { margin-bottom: 9px; font-size: clamp(32px, 11.8vw, 46px); line-height: 1.14; }
+  .hm-hero-copy p { margin-bottom: 12px; font-size: clamp(11px, 4.1vw, 16px); }
+  .hm-hero-buttons { gap: 8px; }
+  .hm-hero-buttons .hm-btn { flex: 1 1 100%; min-height: clamp(42px, 15.1vw, 56px); font-size: clamp(15px, 5.4vw, 18px); }
+  .hm-hero-buttons .hm-btn-blue { background: var(--hm-blue-dark); box-shadow: 0 8px 18px rgba(0, 79, 125, .2); }
+  .hm-signin { width: 100%; max-width: none; margin: 0; padding: clamp(20px, 7.6vw, 28px); border-radius: 14px; }
+  .hm-signin h2 { text-align: center; font-size: clamp(18px, 7.1vw, 28px); }
+  .hm-signin .hm-signin-sub { margin-top: 6px; padding-bottom: 16px; text-align: center; font-size: clamp(12px, 4.3vw, 16px); line-height: 1.7; }
+  .hm-signin form { gap: clamp(12px, 4.3vw, 16px); margin-top: 24px; }
+  .hm-signin .hm-field { gap: 16px; font-size: clamp(12px, 4.3vw, 15px); }
+  .hm-signin .hm-field-row a { font-size: clamp(10px, 3.5vw, 12px); font-weight: 400; text-decoration: none; }
+  .hm-signin .hm-field input { height: clamp(40px, 14.4vw, 54px); padding-left: 18px; border-color: var(--hm-line); font-size: clamp(11px, 3.6vw, 14px); }
+  .hm-signin .hm-btn { min-height: clamp(42px, 15.1vw, 56px); font-size: clamp(15px, 5.4vw, 18px); }
+  .hm-signin .hm-btn-blue { margin-top: 6px; }
+  .hm-signin .hm-btn-outline { margin-top: -6px; }
+  .hm-actions { padding: 40px 0; background: url("/home/building.jpeg") left 70px / auto 1050px no-repeat, #fff; }
+  .hm-actions .hm-shell { width: calc(100% - 64px); max-width: 420px; }
+  .hm-actions .hm-section-title { width: calc(100% + 24px); margin: 0 -12px 44px; font-size: clamp(20px, 10.5vw, 40px); line-height: 1.2; }
+  .hm-title-mobile-break { display: block; }
+  .hm-title-desktop-break { display: none; }
+  .hm-action-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .hm-action-card { min-height: clamp(174px, 91.5vw, 350px); padding: clamp(20px, 10.3vw, 40px) clamp(16px, 8vw, 32px) 32px; border-radius: 16px 16px 0 0; border-bottom-width: 2px; }
+  .hm-action-card.is-green { background: #e3ffe3; }
+  .hm-action-card.is-blue { background: #e5f5ff; }
+  .hm-action-icon { margin-bottom: 24px; padding-bottom: 40px; }
+  .hm-action-icon svg { width: clamp(28px, 14vw, 52px); height: clamp(28px, 14vw, 52px); }
+  .hm-action-card.is-green .hm-action-icon { border-color: #a4dba6; }
+  .hm-action-card.is-blue .hm-action-icon { border-color: #91c9e8; }
+  .hm-action-card h3 { font-size: clamp(13px, 6.5vw, 24px); line-height: 1.3; letter-spacing: -.03em; }
+  .hm-action-card p { margin: 18px 0 20px; font-size: clamp(10px, 5.2vw, 18px); white-space: nowrap; letter-spacing: -.025em; }
+  .hm-action-card .hm-btn { width: min(100%, 210px); min-height: clamp(30px, 15.8vw, 58px); font-size: clamp(11px, 5.3vw, 20px); border-radius: 12px; }
   .hm-support-card { padding: 12px 12px 28px; }
   .hm-support-card > :not(.hm-support-media) { margin-inline: 8px; }
   .hm-support-meta { flex-direction: column; gap: 12px; margin-top: 24px; }
@@ -120,11 +154,6 @@
 /* Phones — purpose-made 370×1034 hero art sits behind copy and card, house peeking out underneath.
    Mobile photos (319×253) and the tall city sketch (390×1364) are shown at native size. */
 @media (max-width: 480px) {
-  .hm-hero { display: block; min-height: calc(100vw * 1034 / 370); padding-bottom: 44vw; }
-  .hm-hero-media { position: absolute; inset: 0; margin: 0; aspect-ratio: auto; }
-  .hm-hero-grid { display: grid; width: calc(100% - 2 * var(--hm-gutter)); grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 32px 0 0; }
-  .hm-hero-copy { padding: 0; }
-  .hm-signin { width: auto; margin: 0; }
   .hm-support { background-image: url("/home/sketch-city-mobile.png"); background-size: 390px auto; }
   .hm-support-card { padding: 16px 16px 28px; }
   .hm-support-media { display: flex; justify-content: center; border-radius: 0; }
