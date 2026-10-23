@@ -8,8 +8,6 @@ const footerColumns = [
     title: "Platform Navigation",
     links: [
       { label: "Home", href: "/" },
-      { label: "How Servicing Works", href: "/help-center" },
-      { label: "Account Types", href: "/help-center" },
       { label: "Help Center & FAQs", href: "/help-center" },
       { label: "Contact Us", href: "/contact" },
     ],
