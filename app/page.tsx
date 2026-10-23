@@ -9,7 +9,7 @@ import "./site.css";
 import "./home/home.css";
 
 export const metadata: Metadata = {
-  title: "RTR Servicing | Your Loan. Less Worry. More Clarity.",
+  title: "RTR Servicing | Your Account. Less Worry. More Clarity.",
   description: "Make a payment, set up AutoPay, view statements and get payment assistance with RTR Servicing.",
 };
 
@@ -38,7 +38,7 @@ function SupportPicture({ desktop, mobile, alt }: { desktop: string; mobile: str
 }
 
 const actions = [
-  { title: "Make a Payment", copy: "Pay online with no fee.", icon: "payment", tone: "green" },
+  { title: "Make a Payment", copy: "Make a payment online.", icon: "payment", tone: "green" },
   { title: "Set Up AutoPay", copy: "Pick your draft date.", icon: "autopay", tone: "blue" },
   { title: "View Statements", copy: "Statements and tax forms.", icon: "statements", tone: "green" },
   { title: "Payment Assistance", copy: "Options if you need help.", icon: "assistance", tone: "blue" },
@@ -63,9 +63,8 @@ export default function HomePage() {
           </div>
           <div className="hm-hero-grid">
             <div className="hm-hero-copy">
-              <span className="hm-badge">Loan Servicing Made Simple</span>
-              <h1 id="hm-hero-title">Your Loan.<br />Less Worry<br /><span>More Clarity.</span></h1>
-              <p>Manage Your Loan Servicing In One Place</p>
+              <span className="hm-badge">Account Servicing Made Simple</span>
+              <h1 id="hm-hero-title">Your Account.<br />Less Worry<br /><span>More Clarity.</span></h1>
               <div className="hm-hero-buttons">
                 <a className="hm-btn hm-btn-outline-dark" href="#sign-in">Make a Payment</a>
                 <a className="hm-btn hm-btn-blue" href="#sign-in">New Here? Register</a>

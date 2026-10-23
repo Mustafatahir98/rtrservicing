@@ -14,7 +14,6 @@ export default function HomeSignIn({ phone }: { phone: string }) {
   return (
     <div id="sign-in" className="hm-signin">
       <h2>Sign in to your Account</h2>
-      <p className="hm-signin-sub">Quick Verification using your SSN And Billing ZIP Code.</p>
 
       <form onSubmit={handleSubmit} noValidate>
         <label className="hm-field">

@@ -34,13 +34,13 @@ export default function ServicingModal() {
             <span aria-hidden="true">×</span>
           </button>
 
-          <h2 id="servicing-modal-title">How Loan Servicing Works</h2>
+          <h2 id="servicing-modal-title">How Account Servicing Works</h2>
           <div className="servicing-modal-copy">
             <p>
-              Your original lender gave you the loan. RTR Servicing was then assigned to manage it on their behalf. This is a standard part of how lending works, and your loan terms stay exactly as your lender set them. Your interest rate, monthly payment, and balance remain unchanged.
+              RTR Servicing manages your account on behalf of your original lender. Your account terms stay exactly as your lender set them. Your interest rate, monthly payment, and balance remain unchanged.
             </p>
             <p>
-              RTR Servicing handles everything that happens after the loan is issued. We collect your monthly payments, maintain your account records, send your billing statements, and generate your annual IRS Form 1098 tax document each January.
+              RTR Servicing collects your monthly payments, maintains your account records, sends your billing statements, and provides your annual IRS Form 1098 tax document when applicable.
             </p>
             <p>
               Once you receive your welcome letter with your RTR account number and payment instructions, you can sign into the RTR Borrower Portal to make payments, view your statement history, and download documents at any time.

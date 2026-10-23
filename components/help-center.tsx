@@ -20,7 +20,7 @@ const faqs: { category: Category; question: string; answer: string }[] = [
   {
     category: "Payments & AutoPay",
     question: "How can I make my monthly payment?",
-    answer: "Sign in to your account to pay online with no fee, set up AutoPay, or call our Customer Care team at 877-252-3761 for other payment options.",
+    answer: "Sign in to your account to pay online, set up AutoPay, or call our Customer Care team at 877-252-3761 for other payment options.",
   },
   {
     category: "Payments & AutoPay",
@@ -30,7 +30,7 @@ const faqs: { category: Category; question: string; answer: string }[] = [
   {
     category: "Payments & AutoPay",
     question: "Can I make extra payments toward principal?",
-    answer: "Yes. You can add an additional principal amount when you make a payment online. Extra payments are applied according to the terms of your loan documents.",
+    answer: "Yes. You can add an additional principal amount when you make a payment online. Extra payments are applied according to the terms of your account documents.",
   },
   {
     category: "Tax Form 1098 & Statements",
