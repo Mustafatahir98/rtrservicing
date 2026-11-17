@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import MockProvider from "@/components/mock-provider";
+import AccessibilityWidget from "@/components/accessibility-widget";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,6 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
+        <a className="skip-link" href="#main-content">Skip to main content</a>
         <Script id="remove-extension-hydration-attributes" strategy="beforeInteractive">
           {`(() => {
             const attribute = "bis_skin_checked";
@@ -63,7 +66,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             }, { once: true });
           })();`}
         </Script>
-        {children}
+        <MockProvider>{children}</MockProvider>
+        <AccessibilityWidget />
       </body>
     </html>
   );

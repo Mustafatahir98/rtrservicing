@@ -1,0 +1,2561 @@
+openapi: 3.1.0
+info:
+  title: RTR Borrower Portal API
+  version: 0.1.0
+  summary: Backend-for-frontend API used by the Next.js borrower portal.
+  description: |
+    The NestJS backend exposes this API to the Next.js portal. The backend reads loan data
+    from RTR's Servicing Captain API and keeps only portal data (logins, loan links,
+    consents, audit log).
+
+    **Conventions**
+    - Base path: `/api/v1`. All dates are ISO 8601 (`2026-10-01`). All date-times are UTC with offset.
+    - Money is a decimal string with two places, for example `"2450.00"`. Currency is always USD.
+    - IDs are opaque strings. Do not parse them.
+    - Errors use RFC 9457 problem details (`application/problem+json`).
+    - Lists use cursor paging: send `cursor` from `nextCursor` to get the next page.
+    - Every response carries `X-Request-Id`. Send it to support when reporting a problem.
+    - Requests that create payments or change AutoPay need an `Idempotency-Key` header (a UUID).
+      Re-sending the same key returns the first result instead of creating a second payment.
+
+    **Authentication**
+    - Sign in, MFA (TOTP), password reset and token refresh happen directly with Amazon Cognito
+      from the browser (Amplify Auth or the Cognito SDK). This API does not handle passwords.
+    - Send the Cognito access token as `Authorization: Bearer <token>`.
+    - Sign-up runs through `/registration/*` because the loan must be matched with RTR first.
+      The backend creates the Cognito user only after the match and the one-time code succeed.
+
+    **Mocking**
+    Every response has an example. Generate TanStack Query hooks and MSW mock handlers from this
+    file (for example with orval), so the frontend can work before the backend exists.
+  contact:
+    name: Borrower Portal Team
+servers:
+  - url: /api/v1
+    description: Same origin as the portal (CloudFront routes /api/* to the backend)
+  - url: http://localhost:4000/api/v1
+    description: Local backend or mock server
+security:
+  - cognitoBearer: []
+tags:
+  - name: Public
+    description: Public website content and contact forms. No sign in.
+  - name: Registration
+    description: Sign up by matching a loan with RTR records.
+  - name: Me
+    description: The signed-in person and their loans.
+  - name: Loans
+    description: Dashboard and loan details.
+  - name: Payments
+    description: Payment history, one-time payments and scheduled payments.
+  - name: Bank Accounts
+    description: Bank accounts on file (masked) and adding a new one through RTR's
+      hosted form.
+  - name: AutoPay
+    description: Recurring payments.
+  - name: Documents
+    description: Statements, tax forms and payoff quotes.
+  - name: Profile
+    description: The person's own contact details.
+  - name: Preferences
+    description: Communication choices and consent records.
+  - name: System
+    description: Health checks.
+
+paths:
+  # ---------------------------------------------------------------- System
+  /health:
+    get:
+      tags: [ System ]
+      operationId: getHealth
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ status ]
+                properties:
+                  status: { type: string, enum: [ ok, degraded ] }
+                  servicingCaptain: { type: string, enum: [ ok, degraded, down ] }
+              example: { status: ok, servicingCaptain: ok }
+
+  # ---------------------------------------------------------------- Public
+  /public/site-info:
+    get:
+      tags: [ Public ]
+      operationId: getSiteInfo
+      summary: Contact details, hours, addresses and licensing shown on every page
+      security: []
+      responses:
+        '200':
+          description: Site info
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SiteInfo' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /public/faqs:
+    get:
+      tags: [ Public ]
+      operationId: listFaqs
+      summary: Help Center questions and answers
+      security: []
+      parameters:
+        - name: category
+          in: query
+          schema: { $ref: '#/components/schemas/FaqCategory' }
+        - name: q
+          in: query
+          description: Keyword search
+          schema: { type: string, maxLength: 100 }
+          example: autopay
+      responses:
+        '200':
+          description: FAQ list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ categories, items ]
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      type: object
+                      required: [ id, label, count ]
+                      properties:
+                        id: { $ref: '#/components/schemas/FaqCategory' }
+                        label: { type: string }
+                        count: { type: integer }
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Faq' }
+              example:
+                categories:
+                  - { id: ACCOUNT_TRANSFERS, label: Account Transfers, count: 2 }
+                  - { id: PAYMENTS_AUTOPAY, label: Payments & AutoPay, count: 3 }
+                  - { id: TAX_STATEMENTS, label: Tax Form 1098 & Statements, count: 2 }
+                  - { id: HARDSHIP, label: Hardship & Assistance, count: 1 }
+                items:
+                  - id: faq-001
+                    category: ACCOUNT_TRANSFERS
+                    question: Why was my account transferred to RTR?
+                    answerMarkdown: Loan servicing rights are sometimes moved from one company to
+                      another. Your loan terms do not change because of the
+                      transfer.
+                  - id: faq-004
+                    category: PAYMENTS_AUTOPAY
+                    question: Can I choose my AutoPay draft day?
+                    answerMarkdown: Yes. You can pick any day RTR allows. The portal warns you if
+                      the day is after your late fee date.
+  /public/legal/{documentType}:
+    get:
+      tags: [ Public ]
+      operationId: getLegalDocument
+      summary: Current version of a legal page or disclosure
+      security: []
+      parameters:
+        - name: documentType
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/LegalDocumentType' }
+      responses:
+        '200':
+          description: Legal document
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LegalDocument' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /public/callback-requests:
+    post:
+      tags: [ Public ]
+      operationId: createCallbackRequest
+      summary: Ask RTR to call back
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CallbackRequestInput' }
+      responses:
+        '201':
+          description: Request received
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactReceipt' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /public/messages:
+    post:
+      tags: [ Public ]
+      operationId: createContactMessage
+      summary: Send an online message to RTR
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactMessageInput' }
+      responses:
+        '201':
+          description: Message received
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactReceipt' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  # ---------------------------------------------------------------- Registration
+  /registration/verify-loan:
+    post:
+      tags: [ Registration ]
+      operationId: verifyLoanForRegistration
+      summary: Step 1 - match account number, SSN last 4 and ZIP with RTR
+      description: |
+        The SSN digits are sent to Servicing Captain for a yes/no match and are never stored or logged.
+        Any mismatch returns the same `422` problem so the caller cannot tell which detail was wrong.
+        Too many failures for one loan returns `423` and locks sign-up for that loan for 24 hours.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VerifyLoanInput' }
+      responses:
+        '200':
+          description: Matched. Choose where to send the one-time code.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RegistrationSession' }
+        '403':
+          description: Portal access is not allowed for this account. Show `detail` as the
+            message.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example:
+                type: https://docs.rtrservicing.example/problems/portal-access-not-allowed
+                title: Online access is not available for this account
+                status: 403
+                detail: Please call us at 877-252-3761 so we can help you.
+                code: PORTAL_ACCESS_NOT_ALLOWED
+        '422':
+          description: Details did not match
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example:
+                type: https://docs.rtrservicing.example/problems/no-match
+                title: We could not match those details
+                status: 422
+                detail: Please check the details and try again, or call us at 877-252-3761.
+                code: REGISTRATION_NO_MATCH
+        '423': { $ref: '#/components/responses/Locked' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /registration/{registrationId}/send-code:
+    post:
+      tags: [ Registration ]
+      operationId: sendRegistrationCode
+      summary: Step 2 - send a one-time code to a contact RTR has on file
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/RegistrationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ contactOptionId ]
+              properties:
+                contactOptionId: { type: string, example: co-email-1 }
+      responses:
+        '202':
+          description: Code sent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ sentTo, expiresAt, resendAvailableAt ]
+                properties:
+                  sentTo: { type: string, example: m*****@example.com }
+                  expiresAt: { type: string, format: date-time }
+                  resendAvailableAt: { type: string, format: date-time }
+              example:
+                {
+                  sentTo: m*****@example.com,
+                  expiresAt: '2026-11-05T15:10:00Z',
+                  resendAvailableAt: '2026-11-05T15:01:00Z'
+                }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /registration/{registrationId}/verify-code:
+    post:
+      tags: [ Registration ]
+      operationId: verifyRegistrationCode
+      summary: Step 3 - confirm the one-time code
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/RegistrationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ code ]
+              properties:
+                code: { type: string, pattern: '^[0-9]{6}$', example: '482913' }
+      responses:
+        '200':
+          description: Code accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ verified, suggestedEmail ]
+                properties:
+                  verified: { type: boolean }
+                  suggestedEmail:
+                    type: [ string, 'null' ]
+                    description: Email on file, offered as the login email
+              example: { verified: true, suggestedEmail: marcus@example.com }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '423': { $ref: '#/components/responses/Locked' }
+  /registration/{registrationId}/complete:
+    post:
+      tags: [ Registration ]
+      operationId: completeRegistration
+      summary: Step 4 - create the login
+      description: Creates the Cognito user, links all of the person's loans and saves
+        terms and E-SIGN acceptance. The browser then signs in with Cognito and
+        sets up the authenticator app.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/RegistrationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CompleteRegistrationInput' }
+      responses:
+        '201':
+          description: Login created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ username, nextStep ]
+                properties:
+                  username: { type: string }
+                  nextStep: { type: string, enum: [ SIGN_IN_AND_SET_UP_AUTHENTICATOR ] }
+              example: { username: marcus@example.com, nextStep: SIGN_IN_AND_SET_UP_AUTHENTICATOR }
+        '409':
+          description: A login already exists for this person or email
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+              example:
+                {
+                  type: https://docs.rtrservicing.example/problems/already-registered,
+                  title: You already have an account,
+                  status: 409,
+                  detail: Please sign in or reset your password.,
+                  code: ALREADY_REGISTERED
+                }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ---------------------------------------------------------------- Me
+  /me:
+    get:
+      tags: [ Me ]
+      operationId: getMe
+      summary: Signed-in person and their loans
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # ---------------------------------------------------------------- Loans
+  /loans/{loanId}/summary:
+    get:
+      tags: [ Loans ]
+      operationId: getLoanSummary
+      summary: Dashboard data for one loan
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+      responses:
+        '200':
+          description: Dashboard summary
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoanSummary' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /loans/{loanId}:
+    get:
+      tags: [ Loans ]
+      operationId: getLoanDetails
+      summary: Full loan overview
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+      responses:
+        '200':
+          description: Loan details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoanDetails' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /loans/{loanId}/people:
+    get:
+      tags: [ Loans ]
+      operationId: listLoanPeople
+      summary: Names and roles of everyone on the loan
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+      responses:
+        '200':
+          description: People on the loan
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ items ]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/LoanPerson' }
+              example:
+                items:
+                  - {
+                      personId: B-55120,
+                      displayName: Marcus Sterling,
+                      role: PRIMARY_BORROWER,
+                      isMe: true
+                    }
+                  - {
+                      personId: B-55121,
+                      displayName: Sarah Jenkins,
+                      role: CO_BORROWER,
+                      isMe: false
+                    }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  # ---------------------------------------------------------------- Payments
+  /loans/{loanId}/payments:
+    get:
+      tags: [ Payments ]
+      operationId: listPayments
+      summary: Payment history (24 months)
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ ALL, POSTED, PROCESSING ]
+            default: ALL
+        - name: q
+          in: query
+          description: Case-insensitive search by confirmation number, ISO or displayed
+            date, raw or formatted USD amount, or the initiator shown in the portal.
+            Show and match the signed-in borrower's own name; other people's
+            undisplayed personal names must never be matched. CSV export must
+            use the same matching rules.
+          schema: { type: string, maxLength: 40 }
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Payments, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ items, nextCursor ]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/PaymentListItem' }
+                  nextCursor: { type: [ string, 'null' ] }
+              example:
+                items:
+                  - {
+                      paymentId: PAY-501883,
+                      date: '2026-10-05',
+                      amount: '2450.00',
+                      status: SCHEDULED,
+                      confirmationNumber: RTR-PAY-501883,
+                      madeBy: Sarah Jenkins (portal)
+                    }
+                  - {
+                      paymentId: PAY-492019,
+                      date: '2026-09-01',
+                      amount: '2450.00',
+                      status: POSTED,
+                      confirmationNumber: RTR-PAY-492019,
+                      madeBy: Marcus Sterling (AutoPay)
+                    }
+                  - {
+                      paymentId: PAY-470555,
+                      date: '2026-06-01',
+                      amount: '2450.00',
+                      status: RETURNED,
+                      confirmationNumber: RTR-PAY-470555,
+                      madeBy: Phone agent
+                    }
+                nextCursor: null
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    post:
+      tags: [ Payments ]
+      operationId: createPayment
+      summary: Make or schedule a one-time payment
+      description: Sent to Servicing Captain, which processes it through Repay. Stays
+        `PROCESSING` or `SCHEDULED` until RTR posts it.
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePaymentInput' }
+      responses:
+        '201':
+          description: Payment accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentConfirmation' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /loans/{loanId}/payments/export:
+    get:
+      tags: [ Payments ]
+      operationId: exportPayments
+      summary: Download payment history as CSV (same filters as the list)
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+        - name: status
+          in: query
+          schema: { type: string, enum: [ ALL, POSTED, PROCESSING ], default: ALL }
+        - name: q
+          in: query
+          description: Same search scope and matching rules as the payment list;
+            include the signed-in borrower's displayed name, never another
+            person's undisplayed name.
+          schema: { type: string, maxLength: 40 }
+      responses:
+        '200':
+          description: CSV file
+          content:
+            text/csv:
+              schema: { type: string }
+              example: |
+                Payment Date,Amount,Status,Confirmation Number,Made By
+                2026-09-01,2450.00,Posted,RTR-PAY-492019,Marcus Sterling (AutoPay)
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /loans/{loanId}/payments/{paymentId}:
+    get:
+      tags: [ Payments ]
+      operationId: getPayment
+      summary: Payment detail and receipt
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: Payment detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentDetail' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /loans/{loanId}/payment-options:
+    get:
+      tags: [ Payments ]
+      operationId: getPaymentOptions
+      summary: Amounts, dates and rules for the Make a Payment screen
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+      responses:
+        '200':
+          description: Payment options
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentOptions' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /loans/{loanId}/authorization-terms:
+    get:
+      tags: [ Payments ]
+      operationId: getAuthorizationTerms
+      summary: Approved ACH authorization wording to show before submitting
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+        - name: type
+          in: query
+          required: true
+          schema: { type: string, enum: [ ONE_TIME, RECURRING ] }
+      responses:
+        '200':
+          description: Authorization wording
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthorizationTerms' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /loans/{loanId}/scheduled-payments:
+    get:
+      tags: [ Payments ]
+      operationId: listScheduledPayments
+      summary: Payments waiting to be drafted
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+      responses:
+        '200':
+          description: Scheduled payments
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ items ]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ScheduledPayment' }
+              example:
+                items:
+                  - paymentId: PAY-501883
+                    amount: '2450.00'
+                    draftDate: '2026-10-05'
+                    bankAccount:
+                      {
+                        bankAccountId: ba-4820,
+                        bankName: Chase,
+                        accountType: CHECKING,
+                        last4: '4820',
+                        isPrimary: true
+                      }
+                    status: SCHEDULED
+                    changeableUntil: '2026-10-04T22:00:00Z'
+                    source: ONE_TIME
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /loans/{loanId}/scheduled-payments/{paymentId}:
+    patch:
+      tags: [ Payments ]
+      operationId: reschedulePayment
+      summary: Change the draft date of a scheduled payment
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ draftDate ]
+              properties:
+                draftDate: { type: string, format: date, example: '2026-10-08' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScheduledPayment' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [ Payments ]
+      operationId: cancelScheduledPayment
+      summary: Cancel a scheduled payment
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: Cancelled
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CancellationResult' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- Bank accounts
+  /loans/{loanId}/bank-accounts:
+    get:
+      tags: [ Bank Accounts ]
+      operationId: listBankAccounts
+      summary: Bank accounts on file (masked)
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+      responses:
+        '200':
+          description: Bank accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ items ]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/BankAccount' }
+              example:
+                items:
+                  - {
+                      bankAccountId: ba-4820,
+                      bankName: Chase,
+                      accountType: CHECKING,
+                      last4: '4820',
+                      isPrimary: true
+                    }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /loans/{loanId}/bank-accounts/add-session:
+    post:
+      tags: [ Bank Accounts ]
+      operationId: createAddBankAccountSession
+      summary: Get a link to RTR's hosted form for adding a bank account
+      description: Full account and routing numbers are entered on RTR's form and
+        never pass through this API. After the form closes, refetch
+        `listBankAccounts`.
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ returnUrl ]
+              properties:
+                returnUrl:
+                  {
+                    type: string,
+                    format: uri,
+                    example: 'https://portal.rtrservicing.example/payments/new?step=bank'
+                  }
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ url, expiresAt ]
+                properties:
+                  url: { type: string, format: uri }
+                  expiresAt: { type: string, format: date-time }
+              example:
+                {
+                  url: 'https://pay.rtrservicing.example/add-account?session=abc123',
+                  expiresAt: '2026-11-05T15:20:00Z'
+                }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  # ---------------------------------------------------------------- AutoPay
+  /loans/{loanId}/autopay:
+    get:
+      tags: [ AutoPay ]
+      operationId: getAutopay
+      summary: Current AutoPay setup and allowed options
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+      responses:
+        '200':
+          description: AutoPay
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Autopay' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    put:
+      tags: [ AutoPay ]
+      operationId: setAutopay
+      summary: Turn on or change AutoPay
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetAutopayInput' }
+      responses:
+        '200':
+          description: AutoPay saved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Autopay' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+    delete:
+      tags: [ AutoPay ]
+      operationId: cancelAutopay
+      summary: Turn off AutoPay
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+      responses:
+        '200':
+          description: AutoPay turned off
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ enrolled, lastDraftDate, confirmationNumber ]
+                properties:
+                  enrolled: { type: boolean }
+                  lastDraftDate:
+                    type: [ string, 'null' ]
+                    format: date
+                    description: A draft already in progress may still go out on this date
+                  confirmationNumber: { type: string }
+              example: { enrolled: false, lastDraftDate: null, confirmationNumber: RTR-AP-CXL-7781 }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /loans/{loanId}/autopay/preview:
+    post:
+      tags: [ AutoPay ]
+      operationId: previewAutopay
+      summary: Show amount per draft, drafts per year and warnings before saving
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AutopaySchedule' }
+      responses:
+        '200':
+          description: Preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AutopayPreview' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ---------------------------------------------------------------- Documents
+  /loans/{loanId}/documents:
+    get:
+      tags: [ Documents ]
+      operationId: listDocuments
+      summary: Statements, tax forms and payoff quotes
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+        - name: category
+          in: query
+          schema: { $ref: '#/components/schemas/DocumentCategory' }
+      responses:
+        '200':
+          description: Documents
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ items ]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Document' }
+              example:
+                items:
+                  - {
+                      documentId: DOC-8812,
+                      category: STATEMENT,
+                      title: September 2026 statement,
+                      documentDate: '2026-09-01',
+                      periodStart: '2026-09-01',
+                      periodEnd: '2026-09-30',
+                      taxYear: null,
+                      sizeBytes: 253952,
+                      contentType: application/pdf
+                    }
+                  - {
+                      documentId: DOC-7710,
+                      category: TAX_FORM,
+                      title: Form 1098 Mortgage Interest Statement,
+                      documentDate: '2026-01-31',
+                      periodStart: null,
+                      periodEnd: null,
+                      taxYear: 2025,
+                      sizeBytes: 122880,
+                      contentType: application/pdf
+                    }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /loans/{loanId}/documents/{documentId}/link:
+    post:
+      tags: [ Documents ]
+      operationId: createDocumentLink
+      summary: Get a short-lived link to open a document
+      description: The link expires within 5 minutes and opens one file only. Each
+        call is recorded in the audit log. Open the URL right away; do not store
+        it.
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+        - name: documentId
+          in: path
+          required: true
+          schema: { type: string }
+          example: DOC-8812
+      responses:
+        '201':
+          description: Link created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DocumentLink' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /loans/{loanId}/payoff-quotes:
+    get:
+      tags: [ Documents ]
+      operationId: listPayoffQuotes
+      summary: Payoff quotes requested for this loan
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+      responses:
+        '200':
+          description: Payoff quotes
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ items ]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/PayoffQuote' }
+              example:
+                items:
+                  - {
+                      quoteId: PQ-3301,
+                      status: READY,
+                      requestedAt: '2026-10-01T14:00:00Z',
+                      goodThroughDate: '2026-10-15',
+                      totalPayoffAmount: '349910.17',
+                      perDiemInterest: '56.06',
+                      documentId: DOC-9001
+                    }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [ Documents ]
+      operationId: requestPayoffQuote
+      summary: Request a payoff quote
+      parameters:
+        - $ref: '#/components/parameters/LoanId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ payoffDate ]
+              properties:
+                payoffDate: { type: string, format: date, example: '2026-10-15' }
+      responses:
+        '202':
+          description: Request accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PayoffQuote' }
+              example:
+                {
+                  quoteId: PQ-3302,
+                  status: REQUESTED,
+                  requestedAt: '2026-11-05T15:00:00Z',
+                  goodThroughDate: '2026-11-20',
+                  totalPayoffAmount: null,
+                  perDiemInterest: null,
+                  documentId: null
+                }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ---------------------------------------------------------------- Profile
+  /me/profile:
+    get:
+      tags: [ Profile ]
+      operationId: getMyProfile
+      summary: The signed-in person's own contact details
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /me/profile/mailing-address:
+    put:
+      tags: [ Profile ]
+      operationId: updateMailingAddress
+      summary: Change my mailing address
+      description: Returns `200` if applied at once, or `202` with a pending change
+        request if RTR must review it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Address' }
+      responses:
+        '200':
+          description: Applied
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '202':
+          description: Waiting for RTR review
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChangeRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /me/profile/phone:
+    put:
+      tags: [ Profile ]
+      operationId: updatePhone
+      summary: Change my phone number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Phone' }
+      responses:
+        '200':
+          description: Applied
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '202':
+          description: Waiting for RTR review
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChangeRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /me/profile/email-change:
+    post:
+      tags: [ Profile ]
+      operationId: startEmailChange
+      summary: Start changing my email (sends a code to the new email)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ newEmail ]
+              properties:
+                newEmail: { type: string, format: email, example: marcus.new@example.com }
+      responses:
+        '202':
+          description: Code sent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ emailChangeId, expiresAt ]
+                properties:
+                  emailChangeId: { type: string }
+                  expiresAt: { type: string, format: date-time }
+              example: { emailChangeId: ec-7781, expiresAt: '2026-11-05T15:15:00Z' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /me/profile/email-change/confirm:
+    post:
+      tags: [ Profile ]
+      operationId: confirmEmailChange
+      summary: Confirm the new email with the code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ emailChangeId, code ]
+              properties:
+                emailChangeId: { type: string, example: ec-7781 }
+                code: { type: string, pattern: '^[0-9]{6}$', example: '102938' }
+      responses:
+        '200':
+          description: Email changed (or sent for review)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /me/profile/change-requests:
+    get:
+      tags: [ Profile ]
+      operationId: listMyChangeRequests
+      summary: My changes waiting for RTR review
+      responses:
+        '200':
+          description: Change requests
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ items ]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ChangeRequest' }
+              example:
+                items:
+                  - {
+                      changeRequestId: cr-1001,
+                      field: MAILING_ADDRESS,
+                      status: PENDING,
+                      requestedAt: '2026-11-04T18:00:00Z',
+                      summary: 'New address: 18 Pine St, Dallas, TX 75201'
+                    }
+
+  # ---------------------------------------------------------------- Preferences
+  /me/communication-preferences:
+    get:
+      tags: [ Preferences ]
+      operationId: getCommunicationPreferences
+      summary: My contact choices for one loan, with the consent wording to show
+      parameters:
+        - name: loanId
+          in: query
+          required: true
+          schema: { type: string }
+          example: '100849201'
+      responses:
+        '200':
+          description: Preferences
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationPreferences' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    put:
+      tags: [ Preferences ]
+      operationId: updateCommunicationPreferences
+      summary: Save my contact choices for one loan
+      description: Each choice records the consent wording version the person saw.
+        Turning a choice off takes effect at once.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdatePreferencesInput' }
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationPreferences' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /me/consent-history:
+    get:
+      tags: [ Preferences ]
+      operationId: listMyConsentHistory
+      summary: Every consent change I made
+      parameters:
+        - name: loanId
+          in: query
+          schema: { type: string }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Consent history
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ items, nextCursor ]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ConsentRecord' }
+                  nextCursor: { type: [ string, 'null' ] }
+              example:
+                items:
+                  - {
+                      consentId: cn-901,
+                      loanId: '100849201',
+                      channel: SMS,
+                      enabled: true,
+                      consentTextVersion: sms-2026-11,
+                      recordedAt: '2026-08-28T19:15:00Z',
+                      source: PORTAL
+                    }
+                nextCursor: null
+
+components:
+  securitySchemes:
+    cognitoBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Amazon Cognito access token from the borrower user pool.
+
+  parameters:
+    LoanId:
+      name: loanId
+      in: path
+      required: true
+      description: Loan account number as returned by `getMe`
+      schema: { type: string }
+      example: '100849201'
+    PaymentId:
+      name: paymentId
+      in: path
+      required: true
+      schema: { type: string }
+      example: PAY-492019
+    RegistrationId:
+      name: registrationId
+      in: path
+      required: true
+      description: Short-lived ID returned by `verifyLoanForRegistration` (expires in
+        15 minutes)
+      schema: { type: string }
+      example: reg-4f2c9e
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: A new UUID for each payment attempt. Reuse it only when retrying
+        the same attempt.
+      schema: { type: string, format: uuid }
+      example: 6f1c2b7e-2d4a-4b8e-9a51-0f3d5b7c9e21
+
+  responses:
+    Unauthorized:
+      description: Not signed in or token expired
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            {
+              type: https://docs.rtrservicing.example/problems/unauthorized,
+              title: Please sign in again,
+              status: 401,
+              code: UNAUTHORIZED
+            }
+    Forbidden:
+      description: Signed in but not allowed (for example, not on this loan)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            {
+              type: https://docs.rtrservicing.example/problems/forbidden,
+              title: You do not have access to this loan,
+              status: 403,
+              code: FORBIDDEN
+            }
+    NotFound:
+      description: Not found
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            {
+              type: https://docs.rtrservicing.example/problems/not-found,
+              title: Not found,
+              status: 404,
+              code: NOT_FOUND
+            }
+    Conflict:
+      description: The request clashes with the current state (for example, past the
+        change cutoff, or an Idempotency-Key reused with a different body)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            {
+              type: https://docs.rtrservicing.example/problems/past-cutoff,
+              title: This payment can no longer be changed,
+              status: 409,
+              detail: The draft is already being processed.,
+              code: PAST_CUTOFF
+            }
+    ValidationError:
+      description: One or more fields are not valid
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            type: https://docs.rtrservicing.example/problems/validation
+            title: Please check the highlighted fields
+            status: 422
+            code: VALIDATION_FAILED
+            errors:
+              - { field: draftDate, message: 'Choose a date between Oct 1 and Oct 16, 2026.' }
+    Locked:
+      description: Too many failed attempts. Try again later or call RTR.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            {
+              type: https://docs.rtrservicing.example/problems/locked,
+              title: Too many attempts,
+              status: 423,
+              detail: 'For your security, online sign up for this account is paused. Please
+                call us at 877-252-3761.',
+              code: LOCKED
+            }
+    TooManyRequests:
+      description: Rate limit reached
+      headers:
+        Retry-After:
+          schema: { type: integer }
+          description: Seconds to wait
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            {
+              type: https://docs.rtrservicing.example/problems/rate-limited,
+              title: Too many requests,
+              status: 429,
+              code: RATE_LIMITED
+            }
+    ServiceUnavailable:
+      description: Servicing Captain is not responding. Show cached data if available,
+        or a friendly message.
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            {
+              type: https://docs.rtrservicing.example/problems/upstream-unavailable,
+              title: Some account details are temporarily unavailable,
+              status: 503,
+              detail: Please try again in a few minutes.,
+              code: UPSTREAM_UNAVAILABLE
+            }
+
+  schemas:
+    # ---------- shared
+    Money:
+      type: string
+      pattern: '^-?[0-9]+\.[0-9]{2}$'
+      description: Decimal amount in USD with two places
+      example: '2450.00'
+    Problem:
+      type: object
+      required: [ type, title, status, code ]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string, description: Short message safe to show the user }
+        status: { type: integer }
+        detail: { type: string, description: Longer message safe to show the user }
+        code: { type: string, description: Stable machine code for the frontend }
+        requestId: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            required: [ field, message ]
+            properties:
+              field: { type: string }
+              message: { type: string }
+    Address:
+      type: object
+      required: [ line1, city, state, postalCode ]
+      properties:
+        line1: { type: string, maxLength: 100, example: 742 Evergreen Terrace }
+        line2: { type: [ string, 'null' ], maxLength: 100, example: null }
+        city: { type: string, maxLength: 60, example: Beverly Hills }
+        state: { type: string, pattern: '^[A-Z]{2}$', example: CA }
+        postalCode: { type: string, pattern: '^[0-9]{5}(-[0-9]{4})?$', example: '90210' }
+    Phone:
+      type: object
+      required: [ number, type ]
+      properties:
+        number: { type: string, description: E.164 format, example: '+15552345679' }
+        type: { type: string, enum: [ MOBILE, HOME, WORK ] }
+    LoanRole:
+      type: string
+      enum: [ PRIMARY_BORROWER, CO_BORROWER, CO_SIGNER, AUTHORIZED_PARTY ]
+    LoanStatus:
+      type: string
+      description: |
+        `ASSISTANCE_REQUIRED` means RTR wants the borrower sent to the Payment Assistance page instead of the dashboard.
+      enum:
+        [
+          CURRENT,
+          IN_GRACE_PERIOD,
+          PAST_DUE,
+          ASSISTANCE_REQUIRED,
+          PAID_OFF,
+          CLOSED
+        ]
+    PaymentBreakdown:
+      type: object
+      required: [ principal, interest, escrow, fees, total ]
+      properties:
+        principal: { $ref: '#/components/schemas/Money' }
+        interest: { $ref: '#/components/schemas/Money' }
+        escrow: { $ref: '#/components/schemas/Money' }
+        fees: { $ref: '#/components/schemas/Money' }
+        additionalPrincipal: { $ref: '#/components/schemas/Money' }
+        total: { $ref: '#/components/schemas/Money' }
+    BankAccount:
+      type: object
+      required: [ bankAccountId, bankName, accountType, last4, isPrimary ]
+      properties:
+        bankAccountId: { type: string, example: ba-4820 }
+        bankName: { type: string, example: Chase }
+        accountType: { type: string, enum: [ CHECKING, SAVINGS ] }
+        last4: { type: string, pattern: '^[0-9]{4}$', example: '4820' }
+        isPrimary: { type: boolean }
+
+    # ---------- public
+    SiteInfo:
+      type: object
+      required: [ companyName, phones, hours, addresses, nmlsId, footerDisclosures ]
+      properties:
+        companyName: { type: string }
+        phones:
+          type: array
+          items:
+            type: object
+            required: [ label, number ]
+            properties:
+              label: { type: string }
+              number: { type: string }
+        hours:
+          type: array
+          items:
+            type: object
+            required: [ days, open, close, timeZone ]
+            properties:
+              days: { type: string }
+              open: { type: string }
+              close: { type: string }
+              timeZone: { type: string }
+        addresses:
+          type: array
+          items:
+            type: object
+            required: [ purpose, lines ]
+            properties:
+              purpose:
+                {
+                  type: string,
+                  enum:
+                    [
+                      PAYMENTS_AND_CORRESPONDENCE,
+                      NOTICE_OF_ERROR_AND_INFO_REQUESTS,
+                      HEADQUARTERS
+                    ]
+                }
+              lines: { type: array, items: { type: string } }
+        nmlsId: { type: string }
+        supportEmail: { type: [ string, 'null' ] }
+        footerDisclosures: { type: array, items: { type: string } }
+      example:
+        companyName: Real Time Resolutions, Inc.
+        phones:
+          - { label: Customer Care (toll-free), number: 877-252-3761 }
+          - { label: HOA-related inquiries, number: 833-636-2981 }
+        hours:
+          - {
+              days: Monday to Thursday,
+              open: '07:00',
+              close: '21:00',
+              timeZone: America/Chicago
+            }
+          - { days: Friday, open: '07:00', close: '19:00', timeZone: America/Chicago }
+        addresses:
+          - {
+              purpose: PAYMENTS_AND_CORRESPONDENCE,
+              lines: [ RTR Servicing, P.O. Box 36655, 'Dallas, TX 75235-1655' ]
+            }
+          - {
+              purpose: NOTICE_OF_ERROR_AND_INFO_REQUESTS,
+              lines: [ RTR Servicing, P.O. Box 36655, 'Dallas, TX 75235-1655' ]
+            }
+        nmlsId: 'NMLS #000000 (placeholder, RTR to confirm)'
+        supportEmail: support@rtrservicing.com
+        footerDisclosures:
+          - Placeholder. RTR compliance to provide the exact footer disclosures.
+    FaqCategory:
+      type: string
+      enum: [ ACCOUNT_TRANSFERS, PAYMENTS_AUTOPAY, TAX_STATEMENTS, HARDSHIP ]
+    Faq:
+      type: object
+      required: [ id, category, question, answerMarkdown ]
+      properties:
+        id: { type: string }
+        category: { $ref: '#/components/schemas/FaqCategory' }
+        question: { type: string }
+        answerMarkdown: { type: string }
+    LegalDocumentType:
+      type: string
+      enum:
+        [
+          PRIVACY_NOTICE,
+          TERMS_OF_USE,
+          ESIGN_DISCLOSURE,
+          TRANSFER_NOTICES,
+          ACCESSIBILITY
+        ]
+    LegalDocument:
+      type: object
+      required: [ documentType, version, effectiveDate, title, bodyMarkdown ]
+      properties:
+        documentType: { $ref: '#/components/schemas/LegalDocumentType' }
+        version: { type: string }
+        effectiveDate: { type: string, format: date }
+        title: { type: string }
+        bodyMarkdown: { type: string }
+      example:
+        documentType: ESIGN_DISCLOSURE
+        version: esign-2026-11
+        effectiveDate: '2026-12-01'
+        title: Consent to Electronic Documents
+        bodyMarkdown: Placeholder text. RTR compliance to provide the approved E-SIGN
+          disclosure.
+    CallbackRequestInput:
+      type: object
+      required: [ fullName, phone, timeZone, preferredWindow, reason, consentTextVersion ]
+      properties:
+        fullName: { type: string, maxLength: 100, pattern: '^(?=.*\p{L})[\p{L}\p{M}\p{Zs}\p{Pd}''\u2019.\u00b7]+$', description: 'Require at least one Unicode letter. Allow letters, combining marks, spaces, dashes, apostrophes, periods and middle dots. Reject digits and other symbols.', example: Jane Doe }
+        phone: { type: string, example: '+15551112222' }
+        accountNumber: { type: [ string, 'null' ], maxLength: 30, pattern: '^(?=.*[0-9])[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$', description: 'Optional. Loan IDs may be numeric; displayed account numbers may contain letters and hyphens. At least one digit is required.', example: 'RTR-100849' }
+        timeZone: { type: string, example: America/Chicago }
+        preferredWindow: { type: string, enum: [ NEXT_AVAILABLE, MORNING, AFTERNOON, EVENING ] }
+        reason:
+          {
+            type: string,
+            enum:
+              [
+                PAYMENT_AUTOPAY,
+                ACCOUNT_TRANSFER,
+                STATEMENTS_TAX,
+                PAYMENT_ASSISTANCE,
+                OTHER
+              ]
+          }
+        consentTextVersion:
+          {
+            type: string,
+            description: Version of the call consent wording shown,
+            example: callback-2026-11
+          }
+    ContactMessageInput:
+      type: object
+      required: [ fullName, email, reason, message ]
+      properties:
+        fullName: { type: string, maxLength: 100, pattern: '^(?=.*\p{L})[\p{L}\p{M}\p{Zs}\p{Pd}''\u2019.\u00b7]+$', description: 'Require at least one Unicode letter. Allow letters, combining marks, spaces, dashes, apostrophes, periods and middle dots. Reject digits and other symbols.', example: Jane Doe }
+        email: { type: string, format: email, example: jane@example.com }
+        phone: { type: [ string, 'null' ] }
+        accountNumber: { type: [ string, 'null' ], maxLength: 30, pattern: '^(?=.*[0-9])[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$', description: 'Optional. Loan IDs may be numeric; displayed account numbers may contain letters and hyphens. At least one digit is required.', example: 'RTR-100849' }
+        reason:
+          {
+            type: string,
+            enum:
+              [
+                PAYMENT_AUTOPAY,
+                ACCOUNT_TRANSFER,
+                STATEMENTS_TAX,
+                PAYMENT_ASSISTANCE,
+                OTHER
+              ]
+          }
+        message: { type: string, maxLength: 2000, example: I have a question about my escrow. }
+    ContactReceipt:
+      type: object
+      required: [ referenceNumber, receivedAt ]
+      properties:
+        referenceNumber: { type: string }
+        receivedAt: { type: string, format: date-time }
+      example: { referenceNumber: CB-2201, receivedAt: '2026-11-05T13:00:00Z' }
+
+    # ---------- registration
+    VerifyLoanInput:
+      type: object
+      required: [ accountNumber, ssnLast4, zipCode ]
+      properties:
+        accountNumber: { type: string, maxLength: 20, example: '100849201' }
+        ssnLast4: { type: string, pattern: '^[0-9]{4}$', example: '4321', writeOnly: true }
+        zipCode: { type: string, pattern: '^[0-9]{5}$', example: '90210' }
+    RegistrationSession:
+      type: object
+      required: [ registrationId, expiresAt, contactOptions ]
+      properties:
+        registrationId: { type: string }
+        expiresAt: { type: string, format: date-time }
+        contactOptions:
+          type: array
+          description: Where a code can be sent. Values are masked. Empty means the person
+            must call RTR.
+          items:
+            type: object
+            required: [ contactOptionId, channel, maskedValue ]
+            properties:
+              contactOptionId: { type: string }
+              channel: { type: string, enum: [ EMAIL, SMS ] }
+              maskedValue: { type: string }
+      example:
+        registrationId: reg-4f2c9e
+        expiresAt: '2026-11-05T15:15:00Z'
+        contactOptions:
+          - {
+              contactOptionId: co-email-1,
+              channel: EMAIL,
+              maskedValue: m*****@example.com
+            }
+    CompleteRegistrationInput:
+      type: object
+      required: [ email, password, acceptedTermsVersion, acceptedEsignVersion ]
+      properties:
+        email: { type: string, format: email, example: marcus@example.com }
+        password:
+          {
+            type: string,
+            minLength: 12,
+            writeOnly: true,
+            example: correct-horse-battery-9
+          }
+        acceptedTermsVersion: { type: string, example: terms-2026-11 }
+        acceptedEsignVersion: { type: string, example: esign-2026-11 }
+
+    # ---------- me & loans
+    Me:
+      type: object
+      required: [ userId, displayName, email, loans ]
+      properties:
+        userId: { type: string }
+        displayName: { type: string }
+        firstName: { type: string }
+        email: { type: string, format: email }
+        mfaEnabled: { type: boolean }
+        loans:
+          type: array
+          items: { $ref: '#/components/schemas/LoanListItem' }
+      example:
+        userId: u-7c1ea9
+        displayName: Marcus Sterling
+        firstName: Marcus
+        email: marcus@example.com
+        mfaEnabled: true
+        loans:
+          - {
+              loanId: '100849201',
+              loanType: Mortgage (First Lien),
+              propertyAddressShort: 742 Evergreen Terrace,
+              role: PRIMARY_BORROWER,
+              status: CURRENT
+            }
+          - {
+              loanId: '100849202',
+              loanType: HELOC (Second Lien),
+              propertyAddressShort: 742 Evergreen Terrace,
+              role: PRIMARY_BORROWER,
+              status: PAST_DUE
+            }
+    LoanListItem:
+      type: object
+      required: [ loanId, loanType, propertyAddressShort, role, status ]
+      properties:
+        loanId: { type: string }
+        loanType: { type: string }
+        propertyAddressShort: { type: string }
+        role: { $ref: '#/components/schemas/LoanRole' }
+        status: { $ref: '#/components/schemas/LoanStatus' }
+    LoanPerson:
+      type: object
+      required: [ personId, displayName, role, isMe ]
+      properties:
+        personId: { type: string }
+        displayName: { type: string }
+        role: { $ref: '#/components/schemas/LoanRole' }
+        isMe: { type: boolean }
+    LoanSummary:
+      type: object
+      required:
+        [
+          loanId,
+          loanType,
+          propertyAddress,
+          status,
+          nextPayment,
+          lastPayment,
+          balance,
+          terms,
+          autopay,
+          dataAsOf
+        ]
+      properties:
+        loanId: { type: string }
+        loanType: { type: string }
+        propertyAddress: { $ref: '#/components/schemas/Address' }
+        status: { $ref: '#/components/schemas/LoanStatus' }
+        assistanceUrl:
+          type: [ string, 'null' ]
+          format: uri
+          description: Set when status is ASSISTANCE_REQUIRED. Redirect the borrower here.
+        nextPayment:
+          type: object
+          required: [ amount, dueDate, breakdown ]
+          properties:
+            amount: { $ref: '#/components/schemas/Money' }
+            dueDate: { type: string, format: date }
+            breakdown: { $ref: '#/components/schemas/PaymentBreakdown' }
+        pastDue:
+          type: [ object, 'null' ]
+          properties:
+            amount: { $ref: '#/components/schemas/Money' }
+            daysPastDue: { type: integer }
+        lastPayment:
+          type: [ object, 'null' ]
+          properties:
+            amount: { $ref: '#/components/schemas/Money' }
+            postedDate: { type: string, format: date }
+        balance:
+          type: object
+          required: [ principalBalance, originalAmount ]
+          properties:
+            principalBalance: { $ref: '#/components/schemas/Money' }
+            originalAmount: { $ref: '#/components/schemas/Money' }
+        terms:
+          type: object
+          required: [ interestRate, rateType, monthlyPayment, maturityDate ]
+          properties:
+            interestRate: { type: string, example: '5.875' }
+            rateType: { type: string, enum: [ FIXED, ADJUSTABLE ] }
+            monthlyPayment: { $ref: '#/components/schemas/Money' }
+            maturityDate: { type: string, format: date }
+        autopay:
+          type: object
+          required: [ enrolled ]
+          properties:
+            enrolled: { type: boolean }
+            description: { type: [ string, 'null' ], example: Monthly on the 1st }
+        dataAsOf:
+          {
+            type: string,
+            format: date-time,
+            description: When the data was read from Servicing Captain
+          }
+      example:
+        loanId: '100849201'
+        loanType: Mortgage (First Lien)
+        propertyAddress:
+          {
+            line1: 742 Evergreen Terrace,
+            line2: null,
+            city: Beverly Hills,
+            state: CA,
+            postalCode: '90210'
+          }
+        status: CURRENT
+        assistanceUrl: null
+        nextPayment:
+          amount: '2450.00'
+          dueDate: '2026-10-01'
+          breakdown:
+            {
+              principal: '545.20',
+              interest: '1704.80',
+              escrow: '200.00',
+              fees: '0.00',
+              additionalPrincipal: '0.00',
+              total: '2450.00'
+            }
+        pastDue: null
+        lastPayment: { amount: '2450.00', postedDate: '2026-09-01' }
+        balance: { principalBalance: '348250.42', originalAmount: '380000.00' }
+        terms:
+          {
+            interestRate: '5.875',
+            rateType: FIXED,
+            monthlyPayment: '2450.00',
+            maturityDate: '2052-10-01'
+          }
+        autopay: { enrolled: false, description: null }
+        dataAsOf: '2026-11-05T15:00:00Z'
+    LoanDetails:
+      type: object
+      required:
+        [
+          loanId,
+          rtrLoanNumber,
+          loanType,
+          status,
+          totalAmountDue,
+          nextDueDate,
+          principalBalance,
+          originalAmount,
+          principalPaidToDate,
+          interestRate,
+          rateType,
+          maturityDate,
+          propertyAddress,
+          servicingPhone,
+          lateFeeRule,
+          prepaymentPenalty
+        ]
+      properties:
+        loanId: { type: string }
+        rtrLoanNumber: { type: string }
+        previousLoanNumber: { type: [ string, 'null' ] }
+        loanType: { type: string }
+        status: { $ref: '#/components/schemas/LoanStatus' }
+        totalAmountDue: { $ref: '#/components/schemas/Money' }
+        pastDueAmount: { $ref: '#/components/schemas/Money' }
+        feesOwed: { $ref: '#/components/schemas/Money' }
+        nextDueDate: { type: string, format: date }
+        principalBalance: { $ref: '#/components/schemas/Money' }
+        originalAmount: { $ref: '#/components/schemas/Money' }
+        principalPaidToDate: { $ref: '#/components/schemas/Money' }
+        interestRate: { type: string }
+        rateType: { type: string, enum: [ FIXED, ADJUSTABLE ] }
+        originationDate:
+          {
+            type: [ string, 'null' ],
+            format: date,
+            description: Loan origination date from the servicing record when available
+          }
+        maturityDate: { type: string, format: date }
+        escrowBalance: { oneOf: [ { $ref: '#/components/schemas/Money' }, { type: 'null' } ] }
+        propertyAddress: { $ref: '#/components/schemas/Address' }
+        servicingPhone: { type: string }
+        lateFeeRule: { type: string, description: Plain-language late fee rule from the loan terms }
+        prepaymentPenalty: { type: boolean }
+      example:
+        loanId: '100849201'
+        rtrLoanNumber: RTR-100849
+        previousLoanNumber: WF-99482014
+        loanType: Mortgage (First Lien)
+        status: CURRENT
+        totalAmountDue: '2450.00'
+        pastDueAmount: '0.00'
+        feesOwed: '0.00'
+        nextDueDate: '2026-10-01'
+        principalBalance: '348250.42'
+        originalAmount: '380000.00'
+        principalPaidToDate: '31749.58'
+        interestRate: '5.875'
+        rateType: FIXED
+        maturityDate: '2052-10-01'
+        escrowBalance: '1820.55'
+        propertyAddress:
+          {
+            line1: 742 Evergreen Terrace,
+            line2: null,
+            city: Beverly Hills,
+            state: CA,
+            postalCode: '90210'
+          }
+        servicingPhone: 877-252-3761
+        lateFeeRule: A late fee of 5% of principal and interest applies if payment is
+          received after the 16th.
+        prepaymentPenalty: false
+
+    # ---------- payments
+    PaymentStatus:
+      type: string
+      enum: [ SCHEDULED, PROCESSING, POSTED, RETURNED, CANCELLED ]
+    PaymentListItem:
+      type: object
+      required: [ paymentId, date, amount, status, confirmationNumber, madeBy ]
+      properties:
+        paymentId: { type: string }
+        date: { type: string, format: date }
+        amount: { $ref: '#/components/schemas/Money' }
+        status: { $ref: '#/components/schemas/PaymentStatus' }
+        confirmationNumber: { type: string }
+        madeBy: { type: string, description: 'Signed-in borrower name for their own payments; otherwise a safe role or source label.' }
+    PaymentDetail:
+      allOf:
+        - $ref: '#/components/schemas/PaymentListItem'
+        - type: object
+          required: [ allocation, paidFrom ]
+          properties:
+            allocation:
+              oneOf:
+                - $ref: '#/components/schemas/PaymentBreakdown'
+                - type: 'null'
+              description: Null until the payment posts
+            appliedToDueDate: { type: [ string, 'null' ], format: date }
+            postedDate: { type: [ string, 'null' ], format: date }
+            paidFrom: { type: string, example: Chase Checking ending 4820 }
+            returnReason: { type: [ string, 'null' ] }
+      example:
+        paymentId: PAY-480112
+        date: '2026-07-01'
+        amount: '2950.00'
+        status: POSTED
+        confirmationNumber: RTR-PAY-480112
+        madeBy: Marcus Sterling (portal)
+        allocation:
+          {
+            principal: '538.10',
+            interest: '1711.90',
+            escrow: '200.00',
+            fees: '0.00',
+            additionalPrincipal: '500.00',
+            total: '2950.00'
+          }
+        appliedToDueDate: '2026-07-01'
+        postedDate: '2026-07-01'
+        paidFrom: Chase Checking ending 4820
+        returnReason: null
+    PaymentOptions:
+      type: object
+      required:
+        [
+          amountOptions,
+          dateOptions,
+          gracePeriodEndDate,
+          lateFee,
+          customAmountLimits,
+          maximumTotalAmount,
+          additionalPrincipalAllowed,
+          paymentFee,
+          sameDayCutoff
+        ]
+      properties:
+        amountOptions:
+          type: array
+          items:
+            type: object
+            required: [ type, label, amount ]
+            properties:
+              type: { type: string, enum: [ REGULAR, TOTAL_DUE, PAYOFF ] }
+              label: { type: string }
+              amount: { $ref: '#/components/schemas/Money' }
+              note: { type: [ string, 'null' ] }
+              payoffQuoteId:
+                {
+                  type: [ string, 'null' ],
+                  description: Set for PAYOFF. Payoff is only offered with a current official
+                    quote.
+                }
+        dateOptions:
+          type: object
+          required: [ earliestDate, latestDate, dueDate, blockedDates ]
+          properties:
+            earliestDate: { type: string, format: date }
+            latestDate: { type: string, format: date }
+            dueDate: { type: string, format: date }
+            blockedDates:
+              {
+                type: array,
+                items: { type: string, format: date },
+                description: Bank holidays and weekends RTR does not draft
+              }
+        sameDayCutoff:
+          {
+            type: string,
+            format: date-time,
+            description: Payments for today must be sent before this time
+          }
+        gracePeriodEndDate:
+          {
+            type: string,
+            format: date,
+            description: Last day before a late fee applies
+          }
+        lateFee:
+          type: object
+          required: [ amount, appliesAfter ]
+          properties:
+            amount: { $ref: '#/components/schemas/Money' }
+            appliesAfter: { type: string, format: date }
+        customAmountLimits:
+          type: object
+          required: [ min, max ]
+          properties:
+            min: { $ref: '#/components/schemas/Money' }
+            max: { $ref: '#/components/schemas/Money' }
+        additionalPrincipalAllowed: { type: boolean }
+        maximumTotalAmount:
+          oneOf: [ { $ref: '#/components/schemas/Money' }, { type: 'null' } ]
+          description: Authoritative maximum combined base payment plus additional
+            principal, excluding the separately disclosed fee. Null means no
+            payment may be submitted until rules are available. This is not a
+            payoff quote. Enforce atomically on the backend.
+        paymentFee: { $ref: '#/components/schemas/Money' }
+      example:
+        amountOptions:
+          - {
+              type: REGULAR,
+              label: Regular payment,
+              amount: '2450.00',
+              note: 'Due October 1, 2026',
+              payoffQuoteId: null
+            }
+          - {
+              type: TOTAL_DUE,
+              label: Total amount due,
+              amount: '2450.00',
+              note: null,
+              payoffQuoteId: null
+            }
+          - {
+              type: PAYOFF,
+              label: Payoff amount,
+              amount: '349910.17',
+              note: 'Good through October 15, 2026',
+              payoffQuoteId: PQ-3301
+            }
+        dateOptions:
+          {
+            earliestDate: '2026-11-05',
+            latestDate: '2026-11-16',
+            dueDate: '2026-11-01',
+            blockedDates: [ '2026-11-11' ]
+          }
+        sameDayCutoff: '2026-11-05T23:00:00Z'
+        gracePeriodEndDate: '2026-11-16'
+        lateFee: { amount: '122.50', appliesAfter: '2026-11-16' }
+        customAmountLimits: { min: '1.00', max: '349910.17' }
+        maximumTotalAmount: '349910.17'
+        additionalPrincipalAllowed: true
+        paymentFee: '0.00'
+    AuthorizationTerms:
+      type: object
+      required: [ type, version, text, revocationText ]
+      properties:
+        type: { type: string, enum: [ ONE_TIME, RECURRING ] }
+        version: { type: string }
+        text:
+          type: string
+          description: Approved wording with placeholders the frontend fills in, such as
+            {amount}, {date}, {schedule}, {last4}
+        revocationText: { type: string, description: How to cancel or stop the authorization }
+      example:
+        type: RECURRING
+        version: ach-recurring-2026-11
+        text: 'Placeholder. RTR compliance to provide. I authorize RTR Servicing to
+          debit {amount} from my account ending {last4} {schedule}, starting
+          {date}.'
+        revocationText: 'Placeholder. You can turn off AutoPay in the portal or by
+          calling 877-252-3761 at least 3 business days before the next draft.'
+    CreatePaymentInput:
+      type: object
+      required: [ amountType, amount, draftDate, bankAccountId, authorization ]
+      properties:
+        amountType: { type: string, enum: [ REGULAR, TOTAL_DUE, PAYOFF, CUSTOM ] }
+        amount: { $ref: '#/components/schemas/Money' }
+        additionalPrincipal: { $ref: '#/components/schemas/Money' }
+        payoffQuoteId: { type: [ string, 'null' ] }
+        draftDate: { type: string, format: date }
+        bankAccountId: { type: string }
+        authorization:
+          type: object
+          required: [ accepted, termsVersion ]
+          properties:
+            accepted: { type: boolean, const: true }
+            termsVersion: { type: string }
+      example:
+        amountType: REGULAR
+        amount: '2450.00'
+        additionalPrincipal: '0.00'
+        payoffQuoteId: null
+        draftDate: '2026-11-05'
+        bankAccountId: ba-4820
+        authorization: { accepted: true, termsVersion: ach-onetime-2026-11 }
+    PaymentConfirmation:
+      type: object
+      required: [ paymentId, confirmationNumber, status, amount, draftDate, bankAccount ]
+      properties:
+        paymentId: { type: string }
+        confirmationNumber: { type: string }
+        status: { $ref: '#/components/schemas/PaymentStatus' }
+        amount: { $ref: '#/components/schemas/Money' }
+        draftDate: { type: string, format: date }
+        bankAccount: { $ref: '#/components/schemas/BankAccount' }
+      example:
+        paymentId: PAY-501990
+        confirmationNumber: RTR-PAY-501990
+        status: PROCESSING
+        amount: '2450.00'
+        draftDate: '2026-11-05'
+        bankAccount:
+          {
+            bankAccountId: ba-4820,
+            bankName: Chase,
+            accountType: CHECKING,
+            last4: '4820',
+            isPrimary: true
+          }
+    ScheduledPayment:
+      type: object
+      required:
+        [
+          paymentId,
+          amount,
+          draftDate,
+          bankAccount,
+          status,
+          changeableUntil,
+          source
+        ]
+      properties:
+        paymentId: { type: string }
+        amount: { $ref: '#/components/schemas/Money' }
+        draftDate: { type: string, format: date }
+        bankAccount: { $ref: '#/components/schemas/BankAccount' }
+        status: { $ref: '#/components/schemas/PaymentStatus' }
+        changeableUntil: { type: string, format: date-time }
+        source: { type: string, enum: [ ONE_TIME, AUTOPAY ] }
+      example:
+        paymentId: PAY-501883
+        amount: '2450.00'
+        draftDate: '2026-10-08'
+        bankAccount:
+          {
+            bankAccountId: ba-4820,
+            bankName: Chase,
+            accountType: CHECKING,
+            last4: '4820',
+            isPrimary: true
+          }
+        status: SCHEDULED
+        changeableUntil: '2026-10-07T22:00:00Z'
+        source: ONE_TIME
+    CancellationResult:
+      type: object
+      required: [ paymentId, cancellationNumber, cancelledAt, stillDue ]
+      properties:
+        paymentId: { type: string }
+        cancellationNumber: { type: string }
+        cancelledAt: { type: string, format: date-time }
+        stillDue:
+          type: [ object, 'null' ]
+          description: Shown as the "payment still due" reminder
+          properties:
+            amount: { $ref: '#/components/schemas/Money' }
+            dueDate: { type: string, format: date }
+            lastDayBeforeLateFee: { type: string, format: date }
+      example:
+        paymentId: PAY-501883
+        cancellationNumber: RTR-CXL-501883
+        cancelledAt: '2026-10-02T16:00:00Z'
+        stillDue:
+          {
+            amount: '2450.00',
+            dueDate: '2026-10-01',
+            lastDayBeforeLateFee: '2026-10-16'
+          }
+
+    # ---------- autopay
+    AutopayFrequency:
+      type: string
+      enum: [ MONTHLY, SEMI_MONTHLY, BIWEEKLY, WEEKLY ]
+    AutopaySchedule:
+      type: object
+      required: [ frequency, firstDraftDate ]
+      properties:
+        frequency: { $ref: '#/components/schemas/AutopayFrequency' }
+        firstDraftDate: { type: string, format: date }
+        secondDayOfMonth:
+          type: [ integer, 'null' ]
+          minimum: 1
+          maximum: 28
+          description: Only for SEMI_MONTHLY
+      example: { frequency: MONTHLY, firstDraftDate: '2026-12-01', secondDayOfMonth: null }
+    AutopayPreview:
+      type: object
+      required:
+        [
+          amountPerDraft,
+          draftsPerYear,
+          totalPerYear,
+          upcomingDrafts,
+          explanation,
+          warnings,
+          planDisclosure,
+          rulesVersion
+        ]
+      properties:
+        amountPerDraft: { $ref: '#/components/schemas/Money' }
+        draftsPerYear: { type: integer }
+        totalPerYear: { $ref: '#/components/schemas/Money' }
+        upcomingDrafts: { type: array, items: { type: string, format: date } }
+        explanation:
+          {
+            type: string,
+            description: 'Plain words on how the drafts are applied, from RTR rules'
+          }
+        planDisclosure:
+          {
+            type: string,
+            description: RTR-approved explanation of standard or accelerated annual drafts
+              and their relation to twelve monthly instalments. No frontend
+              inference.
+          }
+        rulesVersion:
+          {
+            type: string,
+            description: Version of the servicing rules used for this preview. Re-review if
+              it changes before enrollment.
+          }
+        warnings:
+          type: array
+          items:
+            type: object
+            required: [ code, message ]
+            properties:
+              code:
+                {
+                  type: string,
+                  enum: [ AFTER_LATE_FEE_DATE, AMOUNT_MAY_CHANGE, FIRST_DRAFT_SOON ]
+                }
+              message: { type: string }
+      example:
+        amountPerDraft: '1225.00'
+        draftsPerYear: 24
+        totalPerYear: '29400.00'
+        upcomingDrafts: [ '2026-12-05', '2026-12-20', '2027-01-05' ]
+        explanation: Half of your monthly payment is drafted on each date.
+        planDisclosure: 'This schedule has 24 half-payment drafts per year. Actual
+          posting and allocation follow your loan terms.'
+        rulesVersion: example-rules-v1
+        warnings:
+          - {
+              code: AFTER_LATE_FEE_DATE,
+              message: The second draft lands after the 16th. A late fee may apply.
+            }
+    Autopay:
+      type: object
+      required: [ enrolled, allowedFrequencies, allowedDays, weekdayRules ]
+      properties:
+        enrolled: { type: boolean }
+        schedule:
+          {
+            oneOf: [ { $ref: '#/components/schemas/AutopaySchedule' }, { type: 'null' } ]
+          }
+        amountPerDraft: { oneOf: [ { $ref: '#/components/schemas/Money' }, { type: 'null' } ] }
+        bankAccount: { oneOf: [ { $ref: '#/components/schemas/BankAccount' }, { type: 'null' } ] }
+        nextDraftDate: { type: [ string, 'null' ], format: date }
+        authorizationAcceptedAt: { type: [ string, 'null' ], format: date-time }
+        allowedFrequencies: { type: array, items: { $ref: '#/components/schemas/AutopayFrequency' } }
+        allowedDays:
+          {
+            type: object,
+            properties: { from: { type: integer }, to: { type: integer } }
+          }
+        weekdayRules:
+          type: object
+          required: [ weekly, biweekly ]
+          description: Allowed first-draft weekdays from servicing rules. Sunday is 0,
+            Saturday is 6. Empty arrays mean unavailable.
+          properties:
+            weekly:
+              {
+                type: array,
+                uniqueItems: true,
+                items: { type: integer, minimum: 0, maximum: 6 }
+              }
+            biweekly:
+              {
+                type: array,
+                uniqueItems: true,
+                items: { type: integer, minimum: 0, maximum: 6 }
+              }
+      example:
+        enrolled: true
+        schedule: { frequency: MONTHLY, firstDraftDate: '2026-12-01', secondDayOfMonth: null }
+        amountPerDraft: '2450.00'
+        bankAccount:
+          {
+            bankAccountId: ba-4820,
+            bankName: Chase,
+            accountType: CHECKING,
+            last4: '4820',
+            isPrimary: true
+          }
+        nextDraftDate: '2026-12-01'
+        authorizationAcceptedAt: '2026-11-05T15:02:00Z'
+        allowedFrequencies: [ MONTHLY, SEMI_MONTHLY, BIWEEKLY, WEEKLY ]
+        allowedDays: { from: 1, to: 15 }
+        weekdayRules: { weekly: [ 1, 2, 3, 4, 5 ], biweekly: [ 5 ] }
+    SetAutopayInput:
+      type: object
+      required:
+        [
+          schedule,
+          bankAccountId,
+          authorization,
+          expectedRulesVersion,
+          expectedAmountPerDraft,
+          expectedTotalPerYear
+        ]
+      properties:
+        expectedRulesVersion:
+          {
+            type: string,
+            description: Rule version shown and accepted. Backend must reject changes
+              atomically before enrollment.
+          }
+        expectedAmountPerDraft: { $ref: '#/components/schemas/Money' }
+        expectedTotalPerYear: { $ref: '#/components/schemas/Money' }
+        schedule: { $ref: '#/components/schemas/AutopaySchedule' }
+        bankAccountId: { type: string }
+        authorization:
+          type: object
+          required: [ accepted, termsVersion ]
+          properties:
+            accepted: { type: boolean, const: true }
+            termsVersion: { type: string }
+      example:
+        schedule: { frequency: MONTHLY, firstDraftDate: '2026-12-01', secondDayOfMonth: null }
+        bankAccountId: ba-4820
+        authorization: { accepted: true, termsVersion: ach-recurring-2026-11 }
+        expectedRulesVersion: example-rules-v1
+        expectedAmountPerDraft: '2450.00'
+        expectedTotalPerYear: '29400.00'
+
+    # ---------- documents
+    DocumentCategory:
+      type: string
+      enum: [ STATEMENT, TAX_FORM, PAYOFF_QUOTE, INSURANCE, LETTER ]
+    Document:
+      type: object
+      required: [ documentId, category, title, documentDate, sizeBytes, contentType ]
+      properties:
+        documentId: { type: string }
+        category: { $ref: '#/components/schemas/DocumentCategory' }
+        title: { type: string }
+        documentDate: { type: string, format: date }
+        periodStart: { type: [ string, 'null' ], format: date }
+        periodEnd: { type: [ string, 'null' ], format: date }
+        taxYear: { type: [ integer, 'null' ] }
+        sizeBytes: { type: integer }
+        contentType: { type: string, example: application/pdf }
+    DocumentLink:
+      type: object
+      required: [ url, expiresAt ]
+      properties:
+        url: { type: string, format: uri }
+        expiresAt: { type: string, format: date-time }
+      example:
+        {
+          url: 'https://docs.rtrservicing.example/statements/DOC-8812.pdf?sig=abc',
+          expiresAt: '2026-11-05T15:05:00Z'
+        }
+    PayoffQuote:
+      type: object
+      required: [ quoteId, status, requestedAt, goodThroughDate ]
+      properties:
+        quoteId: { type: string }
+        status: { type: string, enum: [ REQUESTED, READY, EXPIRED ] }
+        requestedAt: { type: string, format: date-time }
+        goodThroughDate: { type: string, format: date }
+        totalPayoffAmount: { oneOf: [ { $ref: '#/components/schemas/Money' }, { type: 'null' } ] }
+        perDiemInterest: { oneOf: [ { $ref: '#/components/schemas/Money' }, { type: 'null' } ] }
+        documentId: { type: [ string, 'null' ] }
+
+    # ---------- profile & preferences
+    Profile:
+      type: object
+      required:
+        [
+          personId,
+          fullName,
+          dateOfBirthMasked,
+          mailingAddress,
+          phones,
+          email,
+          pendingChanges
+        ]
+      properties:
+        personId: { type: string }
+        fullName: { type: string }
+        dateOfBirthMasked: { type: [ string, 'null' ], example: '**/**/1980' }
+        mailingAddress: { $ref: '#/components/schemas/Address' }
+        mailingSameAsProperty: { type: boolean }
+        phones: { type: array, items: { $ref: '#/components/schemas/Phone' } }
+        email: { type: string, format: email }
+        pendingChanges: { type: array, items: { $ref: '#/components/schemas/ChangeRequest' } }
+      example:
+        personId: B-55120
+        fullName: Marcus J Sterling
+        dateOfBirthMasked: '**/**/1980'
+        mailingAddress:
+          {
+            line1: 742 Evergreen Terrace,
+            line2: null,
+            city: Beverly Hills,
+            state: CA,
+            postalCode: '90210'
+          }
+        mailingSameAsProperty: true
+        phones: [ { number: '+15552345679', type: MOBILE } ]
+        email: marcus@example.com
+        pendingChanges: []
+    ChangeRequest:
+      type: object
+      required: [ changeRequestId, field, status, requestedAt, summary ]
+      properties:
+        changeRequestId: { type: string }
+        field: { type: string, enum: [ MAILING_ADDRESS, PHONE, EMAIL ] }
+        status: { type: string, enum: [ PENDING, APPROVED, REJECTED ] }
+        requestedAt: { type: string, format: date-time }
+        summary: { type: string }
+        decisionReason: { type: [ string, 'null' ] }
+      example:
+        {
+          changeRequestId: cr-1001,
+          field: MAILING_ADDRESS,
+          status: PENDING,
+          requestedAt: '2026-11-04T18:00:00Z',
+          summary: 'New address: 18 Pine St, Dallas, TX 75201',
+          decisionReason: null
+        }
+    CommunicationChannel:
+      type: string
+      enum: [ EMAIL, ESTATEMENTS, SMS, AUTOMATED_VOICE ]
+    CommunicationPreferences:
+      type: object
+      required: [ loanId, choices, restrictions, lastChangedAt ]
+      properties:
+        loanId: { type: string }
+        choices:
+          type: array
+          items:
+            type: object
+            required: [ channel, enabled, label, consentText, consentTextVersion, editable ]
+            properties:
+              channel: { $ref: '#/components/schemas/CommunicationChannel' }
+              enabled: { type: boolean }
+              label: { type: string }
+              consentText: { type: string, description: Approved wording to show next to the switch }
+              consentTextVersion: { type: string }
+              editable:
+                {
+                  type: boolean,
+                  description: False when an RTR restriction blocks this channel
+                }
+              requiresDisclosure:
+                {
+                  type: [ string, 'null' ],
+                  description: 'For ESTATEMENTS, the legal document the person must accept first
+                    (for example ESIGN_DISCLOSURE)'
+                }
+        restrictions:
+          type: array
+          description: RTR flags that override portal choices, shown as a plain message
+          items:
+            type: object
+            required: [ code, message ]
+            properties:
+              code:
+                {
+                  type: string,
+                  enum: [ CEASE_COMMUNICATION, ATTORNEY_REPRESENTED, BANKRUPTCY, OTHER ]
+                }
+              message: { type: string }
+        lastChangedAt: { type: [ string, 'null' ], format: date-time }
+      example:
+        loanId: '100849201'
+        choices:
+          - {
+              channel: EMAIL,
+              enabled: true,
+              label: Email notices,
+              consentText: Placeholder. RTR compliance to provide.,
+              consentTextVersion: email-2026-11,
+              editable: true,
+              requiresDisclosure: null
+            }
+          - {
+              channel: ESTATEMENTS,
+              enabled: true,
+              label: Paper-free statements,
+              consentText: Placeholder. RTR compliance to provide.,
+              consentTextVersion: estatement-2026-11,
+              editable: true,
+              requiresDisclosure: ESIGN_DISCLOSURE
+            }
+          - {
+              channel: SMS,
+              enabled: false,
+              label: Text message reminders,
+              consentText: Placeholder. RTR compliance to provide.,
+              consentTextVersion: sms-2026-11,
+              editable: true,
+              requiresDisclosure: null
+            }
+          - {
+              channel: AUTOMATED_VOICE,
+              enabled: false,
+              label: Automated calls,
+              consentText: Placeholder. RTR compliance to provide.,
+              consentTextVersion: voice-2026-11,
+              editable: true,
+              requiresDisclosure: null
+            }
+        restrictions: []
+        lastChangedAt: '2026-08-28T19:15:00Z'
+    UpdatePreferencesInput:
+      type: object
+      required: [ loanId, choices ]
+      properties:
+        loanId: { type: string }
+        choices:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [ channel, enabled, consentTextVersion ]
+            properties:
+              channel: { $ref: '#/components/schemas/CommunicationChannel' }
+              enabled: { type: boolean }
+              consentTextVersion: { type: string }
+      example:
+        loanId: '100849201'
+        choices:
+          - { channel: SMS, enabled: true, consentTextVersion: sms-2026-11 }
+    ConsentRecord:
+      type: object
+      required:
+        [
+          consentId,
+          loanId,
+          channel,
+          enabled,
+          consentTextVersion,
+          recordedAt,
+          source
+        ]
+      properties:
+        consentId: { type: string }
+        loanId: { type: string }
+        channel: { $ref: '#/components/schemas/CommunicationChannel' }
+        enabled: { type: boolean }
+        consentTextVersion: { type: string }
+        recordedAt: { type: string, format: date-time }
+        source: { type: string, enum: [ PORTAL, RTR_AGENT, MAIL, SYSTEM ] }

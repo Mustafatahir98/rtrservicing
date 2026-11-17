@@ -1,3 +1,10 @@
-import { Google_Sans_Flex } from "next/font/google";
+import localFont from "next/font/local";
 
-export const googleSansFlex = Google_Sans_Flex({ subsets: ["latin"], display: "swap", variable: "--font-google-sans-flex", adjustFontFallback: false });
+export const googleSansFlex = localFont({
+  src: "../public/fonts/google-sans-flex-latin-variable.woff2",
+  weight: "1 1000",
+  style: "normal",
+  display: "swap",
+  variable: "--font-google-sans-flex",
+  adjustFontFallback: false,
+});

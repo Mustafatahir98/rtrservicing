@@ -1,0 +1,41 @@
+{
+  "updated": "November 2026",
+  "introduction": "RTR Servicing provides customers with optional SMS/text alerts to deliver important notifications and updates related to their loan accounts.",
+  "sections": [
+    {
+      "id": "opting-in",
+      "title": "Opting In to SMS Alerts",
+      "paragraphs": [
+        "By providing us with your mobile number and opting in, you give RTR Servicing, our agents, representatives, employees, affiliates, or anyone texting on our behalf permission to send you account-related text messages, like payment reminders and notifications, in conjunction with the services you have requested."
+      ]
+    },
+    {
+      "id": "canceling-sms-alerts",
+      "title": "Canceling SMS Alerts",
+      "paragraphs": [
+        "You can cancel SMS Alerts at any time by replying “STOP” to any text message we send you. An opt-out confirmation message will be sent to you. You may also email [support@rtrservicing.com](mailto:support@rtrservicing.com) or call (877) 469-7325 and let us know that you would like to opt out of SMS Alerts."
+      ]
+    },
+    {
+      "id": "requesting-support",
+      "title": "Requesting Support",
+      "paragraphs": [
+        "To request support, text “HELP” to any text message we send you or email us at [support@rtrservicing.com](mailto:support@rtrservicing.com). You may also call (877) 469-7325 if you have any questions about SMS Alerts."
+      ]
+    },
+    {
+      "id": "message-frequency-and-rates",
+      "title": "Message Frequency & Rates",
+      "paragraphs": [
+        "Message frequency may vary by account. Message and data rates may apply. Wireless carriers are not liable for undelivered or delayed messages. If you have questions about your text plan or data plan, please contact your wireless provider."
+      ]
+    },
+    {
+      "id": "privacy-and-data-sharing",
+      "title": "Privacy & Data Sharing",
+      "paragraphs": [
+        "Subscriber text messaging originator opt-in data, consent details, or any personally identifiable information (PII) obtained from SMS Alerts will not be shared with any third parties except when explicitly authorized by the subscriber. For more information, please see our Privacy Policy."
+      ]
+    }
+  ]
+}

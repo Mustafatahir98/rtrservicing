@@ -1,0 +1,2 @@
+# Preserve the supplied privacy-notice PDFs byte for byte on every platform.
+public/legal/privacy-notices/*.pdf binary

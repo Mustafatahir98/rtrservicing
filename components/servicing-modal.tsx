@@ -1,6 +1,7 @@
 "use client";
 
 import { MouseEvent, useRef } from "react";
+import { publicSiteInfo } from "@/lib/public-site-info";
 
 export default function ServicingModal() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -34,23 +35,23 @@ export default function ServicingModal() {
             <span aria-hidden="true">×</span>
           </button>
 
-          <h2 id="servicing-modal-title">How Account Servicing Works</h2>
+          <h2 id="servicing-modal-title">How Loan Servicing Works</h2>
           <div className="servicing-modal-copy">
             <p>
-              RTR Servicing manages your account on behalf of your original lender. Your account terms stay exactly as your lender set them. Your interest rate, monthly payment, and balance remain unchanged.
+              Loan servicing is the ongoing administration of a loan after it has been issued. This includes collecting payments, maintaining account records, and providing borrower support. A servicing transfer does not itself change your loan agreement. Your payment can still change under that agreement, including changes related to escrow, taxes or insurance.
             </p>
             <p>
-              RTR Servicing collects your monthly payments, maintains your account records, sends your billing statements, and provides your annual IRS Form 1098 tax document when applicable.
+              As servicer, RTR Servicing manages the account going forward. This includes collecting monthly payments, keeping accurate records, sending billing statements, and preparing the annual IRS Form 1098 each January.
             </p>
             <p>
-              Once you receive your welcome letter with your RTR account number and payment instructions, you can sign into the RTR Borrower Portal to make payments, view your statement history, and download documents at any time.
+              A formal notice will confirm the account number and payment instructions. Once received, the RTR Borrower Portal is available for submitting payments, reviewing payment history, and retrieving account documents.
             </p>
             <p>
-              Do you have questions about your transfer? Our team is available Monday through Thursday, 7am to 9pm CT, and Friday, 7am to 7pm CT.
+              For questions about this transfer, Customer Solutions hours are {publicSiteInfo.hoursShort}. {publicSiteInfo.hoursNote}
             </p>
           </div>
 
-          <a className="servicing-modal-call" href="tel:8772523761">Call 877-252-3761</a>
+          <a className="servicing-modal-call" href={publicSiteInfo.phone.href}>Call {publicSiteInfo.phone.label}</a>
         </div>
       </dialog>
     </>

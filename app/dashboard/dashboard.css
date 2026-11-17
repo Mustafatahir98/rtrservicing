@@ -1,0 +1,44 @@
+/* Portal-specific rules. Shared Tailwind utilities and breakpoints live in app/globals.css. */
+
+/* Receipt drawer entrance (animate-[pp-receipt-slide-in_...] in payment-history.tsx). */
+@keyframes pp-receipt-slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Element defaults for the portal. :where() keeps specificity at zero, so any utility class
+   overrides them without specificity hacks. globals.css already sets box-sizing and
+   `font: inherit` on button and input. */
+@layer base {
+  :where(.portal) :where(h1, h2, h3, p) { margin: 0; }
+  :where(.portal) :where(ul) { margin: 0; padding: 0; list-style: none; }
+  :where(.portal) :where(select) { font: inherit; }
+  :where(.portal) :where(a, button, select) { -webkit-tap-highlight-color: transparent; }
+  :where(.portal) :where(button) { cursor: pointer; }
+  :where(.portal) :where(button:disabled) { cursor: not-allowed; opacity: .6; }
+}
+
+/* Nothing in the portal can be swiped sideways on touch devices; clip (not hidden) keeps sticky positioning working. */
+html:has(.portal), body:has(.portal) { overflow-x: clip; overscroll-behavior-x: none; }
+
+@media print {
+  body:has(.portal) { background: white; }
+  /* !important beats the inline overflow:hidden set while the receipt dialog is open. */
+  body:has(.portal dialog[open]) { overflow: visible !important; }
+}
+
+@layer utilities {
+  /* Portal focus ring. Important and placed after the generated utilities, so it beats
+     `outline: none` on fields and the public-site ring in site.css; components can still
+     restyle focus with a more specific selector (e.g. the header navigation links). */
+  :where(.portal) :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: 3px solid #00649e !important; outline-offset: 3px !important; }
+
+  :where(.portal) :is(button, input, select, textarea):disabled { opacity: 1 !important; cursor: not-allowed; }
+  :where(.portal) :is(input, textarea)::placeholder { color: #52657e !important; opacity: 1; }
+
+  /* Accessibility override: reduced motion must outrank every component transition,
+     so this one rule keeps an intentionally high specificity. */
+  @media (prefers-reduced-motion: reduce) {
+    .portal.portal.portal.portal * { transition: none !important; animation: none !important; }
+  }
+}

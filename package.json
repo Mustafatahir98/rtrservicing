@@ -2,24 +2,52 @@
   "name": "rtr-servicing-landing",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev --port 3000",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint ."
+    "api:generate": "orval --config orval.config.ts",
+    "test:unit": "vitest run",
+    "test:api": "node tests/generated-api.browser.mjs",
+    "dev": "node scripts/mock.mjs dev --port 3000",
+    "dev:mock": "node scripts/mock.mjs dev --port 3000",
+    "build:mock": "node scripts/mock.mjs build",
+    "start:mock": "node scripts/mock.mjs start --port 3000",
+    "build": "node scripts/mock.mjs build",
+    "start": "node scripts/mock.mjs start --port 3000",
+    "lint": "eslint .",
+    "test:payoff": "node tests/payoff-presentation.browser.mjs"
   },
   "dependencies": {
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "resend": "latest"
+    "@t-2/accessibility": "0.2.0",
+    "@tanstack/react-query": "^5.106.0",
+    "next": "16.4.5",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "tailwind-merge": "3.7.0"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "eslint": "latest",
-    "eslint-config-next": "latest",
-    "typescript": "latest"
+    "@faker-js/faker": "^10.6.0",
+    "@tailwindcss/postcss": "^4.3.4",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/node": "26.4.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.4.5",
+    "jsdom": "^31.0.0",
+    "msw": "^2.15.0",
+    "orval": "^8.46.0",
+    "playwright-core": "^1.64.1",
+    "postcss": "^8.5.32",
+    "tailwindcss": "^4.3.4",
+    "tsx": "^4.23.15",
+    "typescript": "6.0.3",
+    "vitest": "^5.1.0"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

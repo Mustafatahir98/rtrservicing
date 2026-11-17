@@ -1,0 +1,472 @@
+{
+  "title": "Affiliate Privacy Notice",
+  "variant": "affiliate",
+  "pdf": "/legal/privacy-notices/rtr-privacy-notice-affiliate.pdf",
+  "sections": [
+    {
+      "id": "facts",
+      "title": "Your personal information",
+      "kind": "facts",
+      "rows": [
+        {
+          "label": "FACTS",
+          "content": [
+            "WHAT DOES RTR SERVICING DO WITH YOUR PERSONAL INFORMATION?"
+          ]
+        },
+        {
+          "label": "Why?",
+          "content": [
+            "Financial companies choose how they share your personal information. Federal law gives consumers the right to limit some but not all sharing. Federal law also requires us to tell you how we collect, share, and protect your personal information. Please read this notice carefully to understand what we do."
+          ]
+        },
+        {
+          "label": "What?",
+          "content": [
+            "The types of personal information we collect and share depend on the product or service you have with us. This information can include: ",
+            {
+              "tag": "ul",
+              "children": [
+                {
+                  "tag": "li",
+                  "children": [
+                    "Social Security number and income"
+                  ]
+                },
+                {
+                  "tag": "li",
+                  "children": [
+                    "Account balances, account transactions and payment history"
+                  ]
+                },
+                {
+                  "tag": "li",
+                  "children": [
+                    "Credit history and credit scores"
+                  ]
+                }
+              ]
+            },
+            " ",
+            {
+              "tag": "p",
+              "children": [
+                "When you are no longer our customer, we continue to protect and/or share your information as described in this notice."
+              ]
+            },
+            " ",
+            {
+              "tag": "p",
+              "children": [
+                "Subscriber text messaging originator opt-in data and consent details will not be shared with any third parties except when explicitly authorized by the subscriber."
+              ]
+            }
+          ]
+        },
+        {
+          "label": "How?",
+          "content": [
+            "All financial companies need to share customers’ personal information to run their everyday business. In the next section, we list the reasons financial companies can share their customers’ personal information, the reasons RTR Servicing chooses to share, and whether you can limit this sharing."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "information-sharing",
+      "title": "Information sharing",
+      "kind": "sharing",
+      "columns": [
+        "Reasons we can share your personal information",
+        "Does RTR Servicing share?",
+        "Can you limit this sharing?"
+      ],
+      "rows": [
+        {
+          "reason": [
+            {
+              "tag": "strong",
+              "children": [
+                "For our everyday business purposes –"
+              ]
+            },
+            " such as to process your transactions, maintain your account(s), respond to court orders and legal investigations, or report to credit bureaus."
+          ],
+          "shares": "Yes",
+          "limit": "No"
+        },
+        {
+          "reason": [
+            {
+              "tag": "strong",
+              "children": [
+                "For our marketing purposes –"
+              ]
+            },
+            " to offer our products and services to you."
+          ],
+          "shares": "Yes",
+          "limit": "No"
+        },
+        {
+          "reason": [
+            {
+              "tag": "strong",
+              "children": [
+                "For joint marketing with other financial companies"
+              ]
+            },
+            " "
+          ],
+          "shares": "Yes",
+          "limit": "No"
+        },
+        {
+          "reason": [
+            {
+              "tag": "strong",
+              "children": [
+                "For our affiliates’ everyday business purposes –"
+              ]
+            },
+            " information about your transactions and experiences."
+          ],
+          "shares": "Yes",
+          "limit": "No"
+        },
+        {
+          "reason": [
+            {
+              "tag": "strong",
+              "children": [
+                "For our affiliates’ everyday business purposes –"
+              ]
+            },
+            " information about your creditworthiness."
+          ],
+          "shares": "Yes",
+          "limit": "Yes"
+        },
+        {
+          "reason": [
+            {
+              "tag": "strong",
+              "children": [
+                "For our affiliates to market to you"
+              ]
+            },
+            " "
+          ],
+          "shares": "Yes",
+          "limit": "Yes"
+        },
+        {
+          "reason": [
+            {
+              "tag": "strong",
+              "children": [
+                "For nonaffiliates to market to you"
+              ]
+            },
+            " "
+          ],
+          "shares": "Yes",
+          "limit": "Yes"
+        }
+      ]
+    },
+    {
+      "id": "questions-and-choices",
+      "title": "Questions & sharing choices",
+      "kind": "facts",
+      "rows": [
+        {
+          "label": "To limit our sharing",
+          "content": [
+            " ",
+            {
+              "tag": "ul",
+              "children": [
+                {
+                  "tag": "li",
+                  "children": [
+                    "Call us at (877) 469-7325 or email us at ",
+                    {
+                      "tag": "a",
+                      "children": [
+                        "support@rtrservicing.com"
+                      ],
+                      "href": "mailto:support@rtrservicing.com"
+                    },
+                    " to let us know you received your privacy notice and want to limit sharing."
+                  ]
+                },
+                " ",
+                {
+                  "tag": "li",
+                  "children": [
+                    "Or, mail the form in the ",
+                    {
+                      "tag": "a",
+                      "children": [
+                        "printer-friendly version (PDF)"
+                      ],
+                      "href": "/legal/privacy-notices/rtr-privacy-notice-affiliate.pdf"
+                    },
+                    " to P.O. Box 561266, Dallas, TX 75356-1266."
+                  ]
+                }
+              ]
+            },
+            " ",
+            {
+              "tag": "p",
+              "children": [
+                {
+                  "tag": "strong",
+                  "children": [
+                    "Please note:"
+                  ]
+                },
+                " If you are a new customer, we can begin sharing your information 30 days from the date we sent this notice. We continue to share and/or protect your information (as described in this notice) even when you are no longer our customer. However, you can contact us at any time to limit our sharing."
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Questions?",
+          "content": [
+            "Call (877) 469-7325"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "who-we-are",
+      "title": "Who we are",
+      "kind": "facts",
+      "rows": [
+        {
+          "label": "Who is providing this notice?",
+          "content": [
+            "RTR Servicing",
+            {
+              "tag": "br",
+              "children": []
+            },
+            "RTR Servicing is d/b/a of Real Time Resolutions, Inc."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "what-we-do",
+      "title": "What we do",
+      "kind": "facts",
+      "rows": [
+        {
+          "label": "How does RTR Servicing protect my personal information?",
+          "content": [
+            "To protect your personal information from unauthorized access and use, we use security measures that comply with federal law. These measures include computer safeguards and secured files and buildings."
+          ]
+        },
+        {
+          "label": "How does RTR Servicing collect my personal information?",
+          "content": [
+            "We collect your personal information, for example, when you: ",
+            {
+              "tag": "ul",
+              "children": [
+                {
+                  "tag": "li",
+                  "children": [
+                    "Have your account transferred to RTR Servicing"
+                  ]
+                },
+                {
+                  "tag": "li",
+                  "children": [
+                    "Pay your bills"
+                  ]
+                },
+                {
+                  "tag": "li",
+                  "children": [
+                    "Give us your contact information"
+                  ]
+                },
+                " ",
+                {
+                  "tag": "li",
+                  "children": [
+                    "Provide employment information"
+                  ]
+                },
+                {
+                  "tag": "li",
+                  "children": [
+                    "Discuss your account with us"
+                  ]
+                }
+              ]
+            },
+            " We also collect your personal information from others, such as credit bureaus or other companies."
+          ]
+        },
+        {
+          "label": "Why can’t I limit all sharing?",
+          "content": [
+            "Federal law gives you the right to limit only: ",
+            {
+              "tag": "ul",
+              "children": [
+                {
+                  "tag": "li",
+                  "children": [
+                    "Sharing for affiliates’ everyday business purposes – information about your creditworthiness"
+                  ]
+                },
+                " ",
+                {
+                  "tag": "li",
+                  "children": [
+                    "Affiliates from using your information to market to you"
+                  ]
+                },
+                {
+                  "tag": "li",
+                  "children": [
+                    "Sharing for nonaffiliates to market to you"
+                  ]
+                }
+              ]
+            },
+            " State laws and individual companies may give you additional rights to limit sharing. See below for more on your rights under state law."
+          ]
+        },
+        {
+          "label": "What happens when I limit sharing for an account I hold jointly with someone else?",
+          "content": [
+            "Your choices will apply to everyone on your account – unless you tell us otherwise."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "definitions",
+      "title": "Definitions",
+      "kind": "facts",
+      "rows": [
+        {
+          "label": "Affiliates",
+          "content": [
+            "Companies related by common ownership or control. They can be financial and nonfinancial companies. ",
+            {
+              "tag": "ul",
+              "children": [
+                {
+                  "tag": "li",
+                  "children": [
+                    "Our affiliates can include financial institutions and consumer services companies."
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Nonaffiliates",
+          "content": [
+            "Companies not related by common ownership or control. They can be financial and nonfinancial companies. ",
+            {
+              "tag": "ul",
+              "children": [
+                {
+                  "tag": "li",
+                  "children": [
+                    "Nonaffiliates we share with can include consumer lenders, mortgage companies, mortgage originators, and debt settlement companies."
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "Joint marketing",
+          "content": [
+            "A formal agreement between nonaffiliated financial companies that together market financial products or services to you.",
+            {
+              "tag": "ul",
+              "children": [
+                {
+                  "tag": "li",
+                  "children": [
+                    "RTR Servicing reserves the right to jointly market with financial services companies."
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "other-important-information",
+      "title": "Other important information",
+      "kind": "paragraphs",
+      "rows": [],
+      "paragraphs": [
+        [
+          {
+            "tag": "strong",
+            "children": [
+              "Vermont residents:"
+            ]
+          },
+          " This notice is required by Vermont state law. If you exercise your right to opt out, we will not share information we collect about you with nonaffiliated third parties, except as permitted by Vermont law, such as to process your transactions or to maintain your account. In addition, we will not share information about your creditworthiness with our affiliates except with your authorization."
+        ],
+        [
+          {
+            "tag": "strong",
+            "children": [
+              "California residents:"
+            ]
+          },
+          " This notice is required by California state law. If you exercise your right to opt out, we will not share information we collect about you with nonaffiliated third parties, except as permitted by California law, such as to process your transactions or to maintain your account."
+        ],
+        [
+          {
+            "tag": "strong",
+            "children": [
+              "Texas residents:"
+            ]
+          },
+          " For questions or complaints about this loan, contact Real Time Resolutions, Inc. d/b/a RTR Servicing at (877) 469-7325, by mail at P.O. Box 561266, Dallas, TX 75356-1266, or by email at ",
+          {
+            "tag": "a",
+            "children": [
+              "support@rtrservicing.com"
+            ],
+            "href": "mailto:support@rtrservicing.com"
+          },
+          ". The lender is licensed and examined under Texas law by the Office of Consumer Credit Commissioner (OCCC), a state agency. If a complaint or question cannot be resolved by contacting the lender, consumers can contact the OCCC to file a complaint or ask a general credit-related question. OCCC address: 2601 N. Lamar Blvd., Austin, Texas 78705. Phone: (800) 538-1579. Fax: (512) 936-7610. Website: ",
+          {
+            "tag": "a",
+            "children": [
+              "occc.texas.gov"
+            ],
+            "href": "https://occc.texas.gov"
+          },
+          ". Email: ",
+          {
+            "tag": "a",
+            "children": [
+              "consumer.complaints@occc.texas.gov"
+            ],
+            "href": "mailto:consumer.complaints@occc.texas.gov"
+          },
+          "."
+        ]
+      ]
+    }
+  ]
+}

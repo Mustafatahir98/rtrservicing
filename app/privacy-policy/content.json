@@ -1,0 +1,54 @@
+{
+  "updated": "November 2026",
+  "introduction": "You can browse our site anonymously without identifying yourself during your visit. We will only obtain information that personally identifies you when you specifically choose to provide it. For example, during your visits to our web site, you may request information or contact us online. You will then need to give us certain personal information just as you would if you were communicating with us in person, by mail or by telephone. Be assured that we maintain electronic security safeguards to help protect any information that we obtain via the Internet.",
+  "sections": [
+    {
+      "id": "customer-privacy-information",
+      "title": "Customer Privacy Information",
+      "paragraphs": [
+        "RTR Servicing (d/b/a of Real Time Resolutions, Inc.) is dedicated to protecting your privacy and disclosing to you how we gather, apply, and share your information. It is our pledge that we place the highest priority on protecting and keeping our customers’ information secure."
+      ]
+    },
+    {
+      "id": "privacy-notices",
+      "title": "Privacy Notices",
+      "paragraphs": [
+        "RTR Servicing (d/b/a of Real Time Resolutions, Inc.) knows that you expect privacy for your personal financial information and is committed to treating your information responsibly. The privacy notices below are designed to inform you of the types of information we collect from our customers, how we use that information, and the circumstances under which we will share information with certain designated third parties. We understand the need to safeguard sensitive information that you have provided to us and your expectation of privacy and security for your personal and financial affairs.",
+        "In general, if we do not mail you a privacy notice on a yearly basis or reside in certain states, you are covered by the Non-Affiliate Privacy Notice.",
+        "If you do receive a privacy notice in the mail on a yearly basis, you are covered by the Affiliate Privacy Notice."
+      ]
+    },
+    {
+      "id": "security-procedures",
+      "title": "Security Procedures",
+      "paragraphs": [
+        "The security of customer information is very important to us and we take a number of steps to safeguard it. We maintain physical, electronic, and procedural safeguards to guard nonpublic personal information about you. We limit access to personal and loan information to those employees and agents who assist us in providing products and services to you."
+      ]
+    },
+    {
+      "id": "your-access-to-information",
+      "title": "Your Access to Information",
+      "paragraphs": [
+        "We provide you with access to information about your loan in several ways. For example, we or our agents may send you billing statements outlining your payments, finance charges, and other loan information. You may also call the customer service telephone number, toll free (877) 469-7325, if you have additional questions about your loan."
+      ]
+    },
+    {
+      "id": "how-this-policy-applies",
+      "title": "How This Policy Applies to You",
+      "paragraphs": [
+        "The examples above are illustrations only, and are not intended to be all inclusive. To the extent we retain information about you – even if we are no longer servicing your loan – we will continue to adhere to the privacy policies and practices referenced above. If we amend this privacy policy at any time, we will inform you of changes as required by law. You may have other privacy protections under state laws and we will comply with applicable state laws with respect to your personal information."
+      ]
+    },
+    {
+      "id": "california-consumer-privacy-act",
+      "title": "California Consumer Privacy Act",
+      "paragraphs": [
+        "Under the CCPA, “Personal Information” is information that identifies, relates to, or could reasonably be linked directly or indirectly with a particular California resident. The CCPA, however, does not apply to certain information, such as information subject to the Gramm-Leach-Bliley Act (“GLBA”)."
+      ],
+      "link": {
+        "label": "Learn how to exercise your rights under the California Consumer Privacy Act",
+        "href": "https://www.realtimeresolutions.com/california-consumer-privacy-act/"
+      }
+    }
+  ]
+}
