@@ -6,9 +6,9 @@ import { authCard, authHeading, authForm, authField, authInput, authAction, auth
 import { nonBlankPattern } from "@/lib/form-validation";
 import { demoRegistration } from "@/lib/demo-login";
 import { borrowerMockMode } from "@/lib/mock-mode";
-import { ApiError } from "@/api/http";
-import { getLegalDocument } from "@/api/generated/public/public";
-import { verifyLoanForRegistration, sendRegistrationCode, verifyRegistrationCode, completeRegistration } from "@/api/generated/registration/registration";
+import { ApiError } from "@/lib/api/http";
+import { getLegalDocument } from "@/lib/api/generated/public/public";
+import { verifyLoanForRegistration, sendRegistrationCode, verifyRegistrationCode, completeRegistration } from "@/lib/api/generated/registration/registration";
 import { useState } from "react";
 
 export default function HomeRegister({phone,onComplete}:{phone:string;onComplete:(email:string)=>void}) {

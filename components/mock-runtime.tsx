@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PortalRequestContext } from "./portal-request";
-import { retryPortalQuery } from "@/api/http";
+import { retryPortalQuery } from "@/lib/api/http";
 import { borrowerMockMode } from "@/lib/mock-mode";
-import { executePortalAction } from "@/api/portal-actions";
+import { executePortalAction } from "@/lib/api/portal-actions";
 import { waitForMockWorker } from "@/lib/mock-worker-ready";
 
 function MockRequests({ children }: { children: React.ReactNode }) {

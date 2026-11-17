@@ -3,7 +3,7 @@
 import { categories, faqs as fallbackFaqs, type Category } from "@/lib/public-faqs";
 import { publicSiteInfo } from "@/lib/public-site-info";
 import { borrowerMockMode } from "@/lib/mock-mode";
-import { useListFaqs } from "@/api/generated/public/public";
+import { useListFaqs } from "@/lib/api/generated/public/public";
 import { useId, useMemo, useState } from "react";
 import { cn } from "./portal-ui";
 import { siteBadge, siteShell, contactSelect, sectionSpacing } from "./site-ui";

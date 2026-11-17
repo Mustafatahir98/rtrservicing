@@ -3,7 +3,7 @@
 import Link from "next/link";
 import PayoffQuotes from "./payoff-quotes";
 import type { MouseEvent, ReactNode } from "react";
-import { createDocumentLink } from "@/api/generated/documents/documents";
+import { createDocumentLink } from "@/lib/api/generated/documents/documents";
 import PortalBackBar from "@/components/portal-back-bar";
 import { MobileSectionSelect } from "./portal-mobile-controls";
 import { cn, page, pageHeading, pageIntro, pageTitle, segment, segmented, textButton } from "./portal-ui";

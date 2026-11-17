@@ -3,9 +3,9 @@ import { handleDialogKeyDown } from "./payment-ui";
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCommunicationPreferences, listMyConsentHistory, updateCommunicationPreferences } from "@/api/generated/preferences/preferences";
-import type { CommunicationPreferences, ConsentRecord } from "@/api/generated/model";
-import { requestDemoConsent } from "@/api/demo-consent";
+import { getCommunicationPreferences, listMyConsentHistory, updateCommunicationPreferences } from "@/lib/api/generated/preferences/preferences";
+import type { CommunicationPreferences, ConsentRecord } from "@/lib/api/generated/model";
+import { requestDemoConsent } from "@/lib/api/demo-consent";
 import { borrowerMockMode } from "@/lib/mock-mode";
 import type { ConsentDemoState, ConsentEvidence } from "@/lib/consent";
 import { button, cn } from "./portal-ui";

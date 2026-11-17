@@ -3,11 +3,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { useGetMe } from "@/api/generated/me/me";
-import type { Me } from "@/api/generated/model";
-import { ApiError } from "@/api/http";
-import { loadPortalView, paymentView } from "@/api/borrower-view";
-import { getPayment, exportPayments } from "@/api/generated/payments/payments";
+import { useGetMe } from "@/lib/api/generated/me/me";
+import type { Me } from "@/lib/api/generated/model";
+import { ApiError } from "@/lib/api/http";
+import { loadPortalView, paymentView } from "@/lib/api/borrower-view";
+import { getPayment, exportPayments } from "@/lib/api/generated/payments/payments";
 import { useQuery } from "@tanstack/react-query";
 import { page } from "./portal-ui";
 import DashboardOverview from "./dashboard-overview";

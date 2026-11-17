@@ -1,6 +1,6 @@
 "use client";
 import { MobileSectionSelect, MobileStepIndicator } from "./portal-mobile-controls";
-import type { CommunicationPreferences } from "@/api/generated/model";
+import type { CommunicationPreferences } from "@/lib/api/generated/model";
 import { backBar, backIcon, backLink } from "./portal-back-bar";
 import { button, cn, page, pageHeading, pageIntro, pageTitle, segment, segmented } from "./portal-ui";
 import { usePortalRequest } from "./portal-request";

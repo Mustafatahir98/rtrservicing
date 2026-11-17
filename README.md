@@ -35,6 +35,11 @@ The borrower portal includes dashboard, account/loan details, payments, AutoPay,
 payment history, documents, payoff and cancellation flows. Generated API client,
 the API contract and browser mock handlers are included for these features.
 
+Frontend API helpers and the generated client live in `lib/api/`. The project
+root has no `api/` directory, so Vercel does not treat the client modules as
+individual serverless functions. Demo portal pages are statically prerendered;
+browser-side MSW and URL parameters drive account and payment interactions.
+
 Images and the brand font are served locally; source/license records are kept
 beside the legal image and font assets.
 

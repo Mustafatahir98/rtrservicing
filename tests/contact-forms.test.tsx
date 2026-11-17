@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import ContactForms from "@/components/contact-forms";
 
 const api = vi.hoisted(() => ({ callback: vi.fn(), contact: vi.fn() }));
-vi.mock("@/api/public-contact", () => ({ submitContractCallback: api.callback, submitContractContact: api.contact }));
+vi.mock("@/lib/api/public-contact", () => ({ submitContractCallback: api.callback, submitContractContact: api.contact }));
 
 const field = (name: string) => document.querySelector<HTMLInputElement>(`[role="tabpanel"]:not([hidden]) input[name="${name}"]`)!;
 

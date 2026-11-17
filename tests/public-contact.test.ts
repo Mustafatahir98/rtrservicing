@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { callbackConsent } from "@/lib/consent";
-import { submitContractCallback, submitContractContact } from "@/api/public-contact";
+import { submitContractCallback, submitContractContact } from "@/lib/api/public-contact";
 
 const api = vi.hoisted(() => ({ callback: vi.fn(), contact: vi.fn() }));
-vi.mock("@/api/generated/public/public", () => ({ createCallbackRequest: api.callback, createContactMessage: api.contact }));
+vi.mock("@/lib/api/generated/public/public", () => ({ createCallbackRequest: api.callback, createContactMessage: api.contact }));
 
 const callbackFields = {
   fullName: "Mustafa Tahir", phone: "(555) 123-4567", accountNumber: "RTR-100849",

@@ -1,4 +1,4 @@
-import type { CommunicationPreferences, ConsentRecord } from "@/api/generated/model";
+import type { CommunicationPreferences, ConsentRecord } from "@/lib/api/generated/model";
 
 // Synthetic content for the MSW demo, never approved production disclosures.
 export const demoEsign = {

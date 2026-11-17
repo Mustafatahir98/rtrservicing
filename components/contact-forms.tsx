@@ -3,7 +3,7 @@
 import { cn } from "./portal-ui";
 import { contactField, contactInput, contactSelect, siteButton } from "./site-ui";
 
-import { submitContractCallback, submitContractContact } from "@/api/public-contact";
+import { submitContractCallback, submitContractContact } from "@/lib/api/public-contact";
 import { callbackConsent } from "@/lib/consent";
 import { accountNumberPattern, accountNumberValidationMessage, containsSensitiveNumber, namePattern, nameValidationMessage, phonePattern, sensitiveMessageError } from "@/lib/form-validation";
 import { publicSecurityMessage, publicSiteInfo } from "@/lib/public-site-info";

@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import type { PayoffQuote } from "@/api/generated/model";
-import { createDocumentLink, listPayoffQuotes, requestPayoffQuote } from "@/api/generated/documents/documents";
+import type { PayoffQuote } from "@/lib/api/generated/model";
+import { createDocumentLink, listPayoffQuotes, requestPayoffQuote } from "@/lib/api/generated/documents/documents";
 import { borrowerMockMode } from "@/lib/mock-mode";
 import { paymentToday, inputCents } from "@/lib/payment-types";
 import { displayDate, money } from "@/lib/portal-format";

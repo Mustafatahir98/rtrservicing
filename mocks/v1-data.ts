@@ -1,4 +1,4 @@
-import type { Address, Autopay, AuthorizationTerms, BankAccount, CommunicationPreferences, Document as ApiDocument, LoanDetails, LoanListItem, LoanSummary, PaymentDetail, PaymentListItem, PaymentOptions, Profile, ScheduledPayment as ApiScheduledPayment } from "@/api/generated/model";
+import type { Address, Autopay, AuthorizationTerms, BankAccount, CommunicationPreferences, Document as ApiDocument, LoanDetails, LoanListItem, LoanSummary, PaymentDetail, PaymentListItem, PaymentOptions, Profile, ScheduledPayment as ApiScheduledPayment } from "@/lib/api/generated/model";
 import type { MockLoanData } from "./borrower-data";
 import { paymentActorLabel } from "@/lib/portal-format";
 import { demoAccountScenarios } from "@/lib/borrower-support";

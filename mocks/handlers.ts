@@ -4,7 +4,7 @@ import type { MockLoanData } from "./borrower-data";
 import { centsAmount, inputCents, paymentToday } from "@/lib/payment-types";
 import { paymentOptions } from "./v1-data";
 import { createV1Handlers } from "./v1-handlers";
-import { submitContractCallback, submitContractContact } from "@/api/public-contact";
+import { submitContractCallback, submitContractContact } from "@/lib/api/public-contact";
 import { paymentAmountError } from "@/lib/payment-rules";
 
 let loans = createMockLoans();

@@ -1,4 +1,4 @@
-import type { AutopayPreview, PaymentOptions } from "@/api/generated/model";
+import type { AutopayPreview, PaymentOptions } from "@/lib/api/generated/model";
 import { inputCents } from "./payment-types";
 
 export function paymentAmountError(options: PaymentOptions | undefined, base: number | null, extra: number | null, custom: boolean): string | null {

@@ -2,9 +2,9 @@
 import { handleDialogKeyDown } from "./payment-ui";
 import { MobileStepIndicator } from "./portal-mobile-controls";
 import { useQuery } from "@tanstack/react-query";
-import type { Autopay, AuthorizationTerms } from "@/api/generated/model";
-import { previewAutopay } from "@/api/generated/auto-pay/auto-pay";
-import { authorizationText } from "@/api/authorization";
+import type { Autopay, AuthorizationTerms } from "@/lib/api/generated/model";
+import { previewAutopay } from "@/lib/api/generated/auto-pay/auto-pay";
+import { authorizationText } from "@/lib/api/authorization";
 import { button, cn, page } from "./portal-ui";
 import { amountCard, amountGrid, amountNote, BankIcon, bankName, bankNote, bankOption, bankText, danger, dialog, dialogActions, dialogButton, dialogClose, dialogContent, dialogText, dialogTitle, errorText, formActions, formButton, greenBadge, panel, PaymentsHeading, PaymentStepper, SelectionLabel } from "./payment-ui";
 import { autopayReviewSnapshot, usableAutopayPreview } from "@/lib/payment-rules";

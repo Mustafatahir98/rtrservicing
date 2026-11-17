@@ -1,4 +1,4 @@
-import type { CancellationResultStillDue } from "@/api/generated/model";
+import type { CancellationResultStillDue } from "@/lib/api/generated/model";
 
 export type PortalDocument = { id: string; document_type: string; title: string; document_date: string; file_size_bytes: number | null; tax_year: number | null };
 export type CancelledPayment = { id: string; amount: string; process_date: string; cancelled_at: string | null; cancellation_confirmation_number: string | null; bank_name: string; account_last4: string; still_due?: CancellationResultStillDue };

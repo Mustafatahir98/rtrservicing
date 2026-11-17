@@ -2,8 +2,8 @@
 import { button, cn } from "./portal-ui";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { getMe } from "@/api/generated/me/me";
-import { setPortalTokenProvider, ApiError } from "@/api/http";
+import { getMe } from "@/lib/api/generated/me/me";
+import { setPortalTokenProvider, ApiError } from "@/lib/api/http";
 import { borrowerMockMode } from "@/lib/mock-mode";
 import { waitForMockWorker } from "@/lib/mock-worker-ready";
 import { returnToSignIn } from "@/lib/portal-auth-return";
